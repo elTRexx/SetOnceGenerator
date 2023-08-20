@@ -4,6 +4,8 @@ This is the source code of my incremental source generator used to generate the 
 
 This project and its entire sources codes are under the CeCill-C license:
 
+<details>
+    <summary>CeCill-C license</summary>
 >"Copyright Aurélien Pascal Maignan, (20 August 2023) 
 >
 >[aurelien.maignan@protonmail.com]
@@ -39,6 +41,7 @@ This project and its entire sources codes are under the CeCill-C license:
 >
 >The code of the body of GetNamespace() method defined here borrow code itself
 >licensed by the .Net Foundation under MIT license."
+</details>
 
 # SetOnceProperties
 
@@ -46,6 +49,8 @@ This is a testing console project of the previous (SetOnceGenerator) incremental
 
 This project and its entire sources codes are under the CeCill-B license:
 
+<details>
+    <summary>CeCill-B license</summary>
 >"Copyright Aurélien Pascal Maignan, (20 August 2023) 
 >
 >[aurelien.maignan@protonmail.com]
@@ -81,6 +86,7 @@ This project and its entire sources codes are under the CeCill-B license:
 >
 >The code of the body of GetNamespace() method defined here borrow code itself
 >licensed by the .Net Foundation under MIT license."
+</details>
 
 -------------------------------------------------
 
