@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<LangVersion>11.0</LangVersion>
+	<IncludeBuildOutput>false</IncludeBuildOutput>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+	<Version>0.0.9</Version>
+	<PackageVersion>0.0.9</PackageVersion>
+	<PackageReleaseNotes>Changed licence to CeCill-C</PackageReleaseNotes>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<PackageId>SettableOnceProperty</PackageId>
+	<PackageReadmeFile>readme.md</PackageReadmeFile>
+	<PackageTags>dotnet</PackageTags>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<Authors>Aurélien Pascal Maignan</Authors>
+	<Description>Constrain property to be set up to n times (once by default)</Description>
+	<Title>SettableOnceProperty</Title>
+	<RepositoryUrl>https://github.com/elTRexx/SetOnceGenerator</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Deprecated\**" />
+    <EmbeddedResource Remove="Deprecated\**" />
+    <None Remove="Deprecated\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" PrivateAssets="all" />
+	<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	<None Include="readme.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
