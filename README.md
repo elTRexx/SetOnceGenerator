@@ -43,7 +43,7 @@ This project and its entire sources codes are under the CeCill-C license:
 
 # SetOnceProperties
 
-This is a testing console project of the previous (SetOnceGenerator) incremental source generator project
+This is a testing console project of the previous (*SetOnceGenerator*) incremental source generator project
 
 This project and its entire sources codes are under the CeCill-B license:
 
