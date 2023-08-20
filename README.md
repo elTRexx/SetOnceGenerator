@@ -1,16 +1,16 @@
-<!--@author Aurélien Pascal Maignan-->
-
-<!--@date 17 August 2023-->
-
 # SetOnceGenerator
 
 This is the source code of my incremental source generator used to generate the ***[SettableOnceProperty](https://www.nuget.org/packages/SettableOnceProperty)*** nuget package 
+This project and its entire sources codes are under the CeCill-C license.
 
-Included is my testing console project (SetOnceProperties)
+# SetOnceProperties
 
-Below is a copy of its own readme file :
+This is a testing console project of the previous (SetOnceGenerator) incremental source generator project
+This project and its entire sources codes are under the CeCill-B license.
 
 -------------------------------------------------
+
+Below is a copy of SettableOnceProperty nuget package readme file:
 
 # SettableOnceProperty
 
