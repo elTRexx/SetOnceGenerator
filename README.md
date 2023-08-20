@@ -6,6 +6,7 @@ This project and its entire sources codes are under the CeCill-C license:
 
 <details>
     <summary>CeCill-C license</summary>
+  
     >"Copyright Aurélien Pascal Maignan, (20 August 2023) 
     >
     >[aurelien.maignan@protonmail.com]
