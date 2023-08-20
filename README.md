@@ -9,7 +9,7 @@ This project and its entire sources codes are under the CeCill-C license:
   
     "Copyright Aurélien Pascal Maignan, (20 August 2023) 
     
-    [aurelien.maignan@protonmail.com]
+    aurelien.maignan@protonmail.com
     
     This software is a computer program whose purpose is to automatically generate source code
     that will, automatically, constrain the set of class's properties up to a given maximum times
@@ -52,7 +52,7 @@ This project and its entire sources codes are under the CeCill-B license:
 
     "Copyright Aurélien Pascal Maignan, (20 August 2023) 
 
-    [aurelien.maignan@protonmail.com]
+    aurelien.maignan@protonmail.com
 
     This software is a computer program whose purpose is
     to test the source generator software named "SetOnceGenerator"
