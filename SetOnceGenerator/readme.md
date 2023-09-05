@@ -83,11 +83,11 @@ If you want to allow multiple `set`, up to `n` times maximum, use `[SetNTimes(n)
 
 ### Optional warning handling
 
-By default, nothing warn you when you try
+By default, nothing warn you when you try to
 
-- to `Get` a non already setted property 
+- `Get` a non already setted property 
 
-- to `Set` an already maximum setted property
+- `Set` an already maximum setted property
 
 You can handle this with your own logic by uncommenting and extending the provided partial class `SettableNTimesProperty`, found in your project directory under the automatically created "Custom_Warning" folder.
 
