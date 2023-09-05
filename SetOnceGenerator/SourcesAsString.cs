@@ -132,6 +132,16 @@ namespace SetOnceGenerator
             }
         }
 
+        public readonly struct AttributeDefinition
+        {
+            public int MaxSet { get; init; }
+
+            public AttributeDefinition(int maxSet)
+            {
+                MaxSet = maxSet;
+            }
+        }
+        
         /// <summary>
         /// Structure that store an interface <see cref="TypeName"/>,
         /// it's namespace as a <see cref="string"/>
@@ -168,16 +178,16 @@ namespace SetOnceGenerator
             public TypeName TypeName { get; init; }
             public string FullTypeName => TypeName.FullName;
 
-            public int MaxSet { get; init; }
+            public AttributeDefinition AttributeArgument { get; init; }
 
             public bool IsNull => string.IsNullOrWhiteSpace(Name)
                 || string.IsNullOrWhiteSpace(TypeName.Name);
 
-            public PropertyDefinition(string name, TypeName typeName, int maxSet)
+            public PropertyDefinition(string name, TypeName typeName, AttributeDefinition attributeArguments)
             {
                 Name = name;
                 TypeName = typeName;
-                MaxSet = maxSet;
+                AttributeArgument = attributeArguments;
             }
         }
 
@@ -255,6 +265,15 @@ namespace SetOnceGenerator
         #endregion
 
         #region Utilities
+
+        public static T GetAttributeArgument<T>(this AttributeData? attributeData, int augumentIndex, T defaultValue)
+        {
+            if (attributeData == null || attributeData.ConstructorArguments == null || attributeData.ConstructorArguments.Length >= augumentIndex
+                || attributeData.ConstructorArguments[augumentIndex].Value == null || attributeData.ConstructorArguments[augumentIndex].Value is not T)
+                return defaultValue;
+            return (T)attributeData.ConstructorArguments[augumentIndex].Value!;
+        }
+
         /// <summary>
         /// Find the index of any <see cref="{T}"/> item in a <see cref="IEnumerable{T}"/>
         /// </summary>
@@ -516,6 +535,8 @@ namespace SetOnceGenerator
             return statements;
         }
 
+        private static string FormatAttributeParameters(this PropertyDefinition propertyDefinition)
+            => $"\"{propertyDefinition.Name}\", {propertyDefinition.AttributeArgument.MaxSet}";
 
         /// <summary>
         /// Format a given <see cref="PropertyDefinition"/> into 
@@ -531,12 +552,13 @@ namespace SetOnceGenerator
             string hiddenFieldName = $"_setNTimes_{interfaceDefinition.FullName.Replace('<','_').Replace(", ","_").Replace(">","")}_{propertyDefinition.Name}";
 
             string propertyCode = $@"
-        private readonly SettableNTimesProperty<{propertyDefinition.FullTypeName}> {hiddenFieldName} = new({propertyDefinition.MaxSet});
+        private readonly SettableNTimesProperty<{propertyDefinition.FullTypeName}> {hiddenFieldName} = new({propertyDefinition.FormatAttributeParameters()});
         {propertyDefinition.FullTypeName} {interfaceDefinition.FullName}.{propertyDefinition.Name}
         {{
             get => {hiddenFieldName}.Value;
             set => {hiddenFieldName}.Value = value;
         }}";
+
             return propertyCode + "\n";
         }
 
@@ -555,7 +577,7 @@ namespace SetOnceGenerator
 /**
  * @author Aurélien Pascal Maignan
  * 
- * @date 17 August 2023
+ * @date 20 August 2023
  */
 namespace SetOnceGenerator
 {
@@ -566,7 +588,9 @@ namespace SetOnceGenerator
 
         public SetNTimesAttribute(int maximumSettable = 1)
         {
-            MaximumSettable = maximumSettable;
+            MaximumSettable = Math.Max(0, maximumSettable);
+            //SetWarning = setWarning as Action;
+            //GetWarning = getWarning as Action;
         }
     }
 
@@ -592,21 +616,23 @@ namespace SetOnceGenerator
 /**
  * @author Aurélien Pascal Maignan
  * 
- * @date 17 August 2023
+ * @date 20 August 2023
  */
 namespace SetOnceGenerator
 {
-    public class SettableNTimesProperty<T>
+    public partial class SettableNTimesProperty<T>
     {
         private readonly int _maximumSettableTimes = 1;
         private int _currentSettedTimes = 0;
+        private string _propertyName = """";
+
         private T _value = default;
         public T Value
         {
             get 
             {
-                if (_currentSettedTimes == 0)                    
-                    Console.WriteLine(""Value hasn't been set yet !"");
+                if (_currentSettedTimes == 0) 
+                    GetWarning();
                 return _value;
             }
 
@@ -614,7 +640,7 @@ namespace SetOnceGenerator
             {
                 if (_currentSettedTimes >= _maximumSettableTimes)
                 {
-                    Console.WriteLine($""Value has already reach its maximum ({_maximumSettableTimes}) settable times""); 
+                    SetWarning();
                     return;
                 }
                 _value = value;
@@ -622,16 +648,20 @@ namespace SetOnceGenerator
             }
         }
 
-        public SettableNTimesProperty(int maximum = 1)
+        public SettableNTimesProperty(string propertyName, int maximum = 1)//, Action? setWarning = null, Action? getWarning = null)
         {
-            _maximumSettableTimes = maximum;
+            _propertyName = propertyName;
+            _maximumSettableTimes = Math.Max(0, maximum);
         }
 
-        public SettableNTimesProperty(T value, int maximum = 1) : this(maximum)
+        public SettableNTimesProperty(T value, string propertyName, int maximum = 1) : this(propertyName, maximum)//, Action? setWarning = null, Action? getWarning = null) : this(maximum, setWarning, getWarning)
         {
             _value = value;
             _currentSettedTimes++;
         }
+
+        partial void GetWarning();      
+        partial void SetWarning();      
 
         public static implicit operator T(SettableNTimesProperty<T> settableNTimesProperty) 
             => settableNTimesProperty.Value;
@@ -715,9 +745,10 @@ namespace SetOnceGenerator
                     return null;
 
                 int maxSet = 0;
+
                 foreach (var attribute in property.GetAttributes())
                 {
-                    var attributeClass = attribute.AttributeClass;
+                    var attributeClass = attribute.AttributeClass;                    
 
                     if (SymbolEqualityComparer.Default.Equals(attributeClass, setOnceAttributeType))
                     {
@@ -726,13 +757,7 @@ namespace SetOnceGenerator
                     }
                     if (SymbolEqualityComparer.Default.Equals(attributeClass, setNTimesAttributeType))
                     {
-                        var attributeArguments = attribute.ConstructorArguments;
-                        maxSet = attributeArguments.Length == 1
-                            ? (attributeArguments[0].Value != null
-                              && (attributeArguments[0].Value is int))
-                              ? (int)attributeArguments[0].Value!
-                              : 1
-                            : 1;
+                        maxSet = attribute.GetAttributeArgument(0, 1);
                         break;
                     }
                 }
@@ -755,7 +780,10 @@ namespace SetOnceGenerator
                                         property.Name, 
                                         new TypeName(propertyTypeName, 
                                         typeParamertersNames), 
-                                        maxSet)
+                                        new AttributeDefinition(
+                                            maxSet
+                                            )
+                                        )
                                     );
                 baseTypeDeclarationSyntax = interfaceDeclarationSyntax;
             }
@@ -821,7 +849,7 @@ namespace SetOnceGenerator
             return new PropertyDefinition(propertyDefinition.Name,
                                           new TypeName(propertyDefinition.TypeName.Name, 
                                                        transformedParamertersNames), 
-                                          propertyDefinition.MaxSet
+                                          propertyDefinition.AttributeArgument
                                           );
         }
 

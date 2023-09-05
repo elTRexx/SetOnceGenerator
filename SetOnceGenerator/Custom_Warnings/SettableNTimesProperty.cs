@@ -68,22 +68,31 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
 //termes. 
-#endregion 
+#endregion
 #endregion
 
-using SetOnceProperties.Sources.SettableOnces.Interfaces;
-
-namespace SetOnceProperties.Sources.SettableOnces
+//Uncomment this class if you want to handle your custom warnings when a SettableNTimes property
+//is being set above it's maximum allowed settable times, 
+//and/or when trying to get such a not yet setted property.
+ 
+/*
+namespace SetOnceGenerator
 {
-    internal partial class POCO2<T> : IPOCO<T>
+    public partial class SettableNTimesProperty<T>
     {
-        public POCO2()
-        { }
-
-        public POCO2(IDTO data, ICustomContainer<T> customContainer)
+        partial void GetWarning()
         {
-            ((IPOCO<T>)this).Data = data;
-            ((IPOCO<T>)this).CustomContainer = customContainer;
+            // Add your implementation here.
+            // Example :
+            //Console.WriteLine($"{_propertyName} hasn't been set yet ! (returning default value instead)");
+        }
+
+        partial void SetWarning()
+        {
+            // Add your implementation here.
+            // Example :
+            //Console.WriteLine($"{_propertyName} has already reach its maximum ({_maximumSettableTimes}) settable times.");
         }
     }
 }
+*/

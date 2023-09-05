@@ -7,15 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.0.9</Version>
-	<PackageVersion>0.0.9</PackageVersion>
-	<PackageReleaseNotes>Changed licence to CeCill-C</PackageReleaseNotes>
+	<Version>0.1.2</Version>
+	<PackageVersion>0.1.2</PackageVersion>
+	<PackageReleaseNotes>Adding support for custom warning handling of not allowed get/set calls</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>
 	<PackageTags>dotnet</PackageTags>
-	<PackageLicenseExpression>MIT</PackageLicenseExpression>
-	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<PackageLicenseExpression>CECILL-C</PackageLicenseExpression>
+	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 	<Authors>Aurélien Pascal Maignan</Authors>
 	<Description>Constrain property to be set up to n times (once by default)</Description>
 	<Title>SettableOnceProperty</Title>
@@ -31,8 +31,21 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" PrivateAssets="all" />
-	<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-	<None Include="readme.md" Pack="true" PackagePath="\" />
+	<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="False" />
+	<None Include="readme.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
+	<ItemGroup>
+		<None Include="Custom_Warnings\SettableNTimesProperty.cs">
+			<Pack>true</Pack>
+			<PackagePath>Copied_Files\Custom_Warnings</PackagePath>
+			<PackageCopyToOutput>false</PackageCopyToOutput>
+		</None>
+		<None Include="build\*.*">
+			<Pack>true</Pack>
+			<PackagePath>build\$(TargetFramework)\</PackagePath>
+			<PackageCopyToOutput>false</PackageCopyToOutput>
+		</None>
+	</ItemGroup>
+	
 </Project>

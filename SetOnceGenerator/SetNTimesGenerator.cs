@@ -32,9 +32,6 @@
 
 //The fact that you are presently reading this means that you have had
 //knowledge of the CeCILL-C license and that you accept its terms.
-
-//The code of the body of GetNamespace() method defined here borrow code itself
-//licensed by the .Net Foundation under MIT license. 
 #endregion
 
 #region French version
@@ -72,9 +69,6 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-C, et que vous en avez accepté les
 //termes. 
-
-// Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
-// lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
 #endregion 
 #endregion
 

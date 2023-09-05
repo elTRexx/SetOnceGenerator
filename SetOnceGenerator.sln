@@ -5,7 +5,16 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetOnceProperties", "SetOnceProperties\SetOnceProperties.csproj", "{D9EE9802-1D0C-4C9D-B31D-F3D930244943}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetOnceGenerator", "SetOnceGenerator\SetOnceGenerator.csproj", "{588FFF11-DE2B-492A-93A2-1AA661944154}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetOnceGenerator", "SetOnceGenerator\SetOnceGenerator.csproj", "{588FFF11-DE2B-492A-93A2-1AA661944154}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{D1FB6899-E74B-43C5-B2BE-6D277F5E0C1C}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSES\CeCill-B_LICENSE_English.txt = LICENSES\CeCill-B_LICENSE_English.txt
+		LICENSES\CeCill-B_LICENSE_French.txt = LICENSES\CeCill-B_LICENSE_French.txt
+		LICENSES\CeCill-C_LICENSE_English.txt = LICENSES\CeCill-C_LICENSE_English.txt
+		LICENSES\CeCill-C_LICENSE_French.txt = LICENSES\CeCill-C_LICENSE_French.txt
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

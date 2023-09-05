@@ -32,9 +32,6 @@
 
 //The fact that you are presently reading this means that you have had
 //knowledge of the CeCILL-B license and that you accept its terms.
-
-//The code of the body of GetNamespace() method defined here borrow code itself
-//licensed by the .Net Foundation under MIT license. 
 #endregion
 
 #region French version
@@ -81,6 +78,9 @@ namespace SetOnceProperties.Sources.SettableOnces
 {
     public static class ExtensionUtils
     {
+        public static void Warn()
+            => Console.WriteLine("Can not set property, maximum settable times reached !");
+
         public static string GetRealTypeName(this Type t)
         {
             if (!t.IsGenericType)
