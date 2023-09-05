@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.1.2</Version>
-	<PackageVersion>0.1.2</PackageVersion>
-	<PackageReleaseNotes>Adding support for custom warning handling of not allowed get/set calls</PackageReleaseNotes>
+	<Version>0.1.3</Version>
+	<PackageVersion>0.1.3</PackageVersion>
+	<PackageReleaseNotes>Allow package configuration to prevent automatic copy of custom warning handling partial class</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>

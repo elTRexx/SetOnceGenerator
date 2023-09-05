@@ -1243,6 +1243,29 @@ partial void SetWarning()
 }
 ```
 
+## Disable automatic copy of Custom_Warnings folder
+
+If you don't wan't to handle you custom logic of `Get` and `Set` warning, and allow to remove the automatically generated Custom_Warnings folder and `SettableNTimesProperty` class, then you can edit your .csproj file to set `RefreshCopy` to `false` :
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Testing_SetOncePackage</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+      <RefreshCopy>False</RefreshCopy>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SettableOnceProperty" Version="0.1.3" />
+  </ItemGroup>
+
+</Project>
+```
+
 ## Note
 
 I first used a bool backend field to manage this but ended up generalising it to be settable `n` times. 

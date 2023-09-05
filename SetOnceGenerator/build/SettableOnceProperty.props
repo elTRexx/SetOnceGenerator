@@ -3,11 +3,14 @@
 		<SettableNTimesPropertyToCopy Include="$(MSBuildThisFileDirectory)..\..\Copied_Files\**\*.*" />
 	</ItemGroup>
 	
+	<PropertyGroup>
+		<RefreshCopy>True</RefreshCopy>
+	</PropertyGroup>
+	
 	<Target Name="CopyPartialWarningsMethods" BeforeTargets="BeforeCompile">
-		<Message Text="%(SettableNTimesPropertyToCopy.RecursiveDir)%(SettableNTimesPropertyToCopy.Filename)%(SettableNTimesPropertyToCopy.Extension)"/>
 		<Copy SourceFiles="@(SettableNTimesPropertyToCopy)"			  
 			  DestinationFolder="@(SettableNTimesPropertyToCopy -> '$(MSBuildProjectDirectory)\%(RecursiveDir)')"
-			  Condition="!Exists('$(MSBuildProjectDirectory)\%(SettableNTimesPropertyToCopy.RecursiveDir)%(SettableNTimesPropertyToCopy.Filename)%(SettableNTimesPropertyToCopy.Extension)')"
+			  Condition="$(RefreshCopy) And !Exists('$(MSBuildProjectDirectory)\%(SettableNTimesPropertyToCopy.RecursiveDir)%(SettableNTimesPropertyToCopy.Filename)%(SettableNTimesPropertyToCopy.Extension)')"
 			  />
 	</Target>
 </Project>
