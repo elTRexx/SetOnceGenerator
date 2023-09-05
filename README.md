@@ -1211,7 +1211,7 @@ public interface IDTO
 
 If you want to allow multiple `set`, up to `n` times maximum, use `[SetNTimes(n)]` attribute instead of `[SetOnce]`
 
-#### Optional warning handling
+### Optional warning handling
 
 By default, nothing warn you when you try
 
