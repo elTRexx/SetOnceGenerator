@@ -1162,6 +1162,8 @@ If you want to mark a property being settable max `n` times, you have to follow 
 
 * On any concrete classes that implement that given `interface`, make sure to modify it to be `partial`
 
+* Optionally, you can add your own logic to handle warnings when trying to get or set the property extending `SettableNTimesProperty.GetWarning()`  and `SettableNTimesProperty.SetWarning()` method
+
 ## Example
 
 Lets say you have this DTO class :
@@ -1208,6 +1210,38 @@ public interface IDTO
 ```
 
 If you want to allow multiple `set`, up to `n` times maximum, use `[SetNTimes(n)]` attribute instead of `[SetOnce]`
+
+##### Optional warning handling
+
+By default, nothing warn you when you try
+
+- to `Get` a non already setted property 
+
+- to `Set` an already maximum setted property
+
+You can handle this with your own logic by uncommenting and extending the provided partial class `SettableNTimesProperty`, found in your project directory under the automatically created "Custom_Warning" folder.
+
+You can modify the 2 provided partial methods, `GetWarning()` and `SetWarning()` to do so.
+
+`SettableNTimesProperty` class also expose 2 private fields you can use to customize your warning :
+
+- `_propertyName`` the name of the property
+
+- `_maximumSettableTimes` the maximum settable times this property can be setted
+
+For example :
+
+```C#
+partial void GetWarning()
+{
+    Console.WriteLine($"{_propertyName} hasn't been set yet ! (returning default value instead)");    
+}
+
+partial void SetWarning()
+{
+    Console.WriteLine($"{_propertyName} has already reach its maximum ({_maximumSettableTimes}) settable times.");
+}
+```
 
 ## Note
 
