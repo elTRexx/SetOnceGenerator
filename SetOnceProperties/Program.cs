@@ -81,13 +81,17 @@ int current_identifier = 0;
 IDTO settableOnceDTO1 = new DTO(++current_identifier, "First Settable Once DTO");
 IDTO settableOnceDTO2 = new DTO(++current_identifier, "Second Settable Once DTO");
 
-IPOCO settableOncePOCO1 = new POCO(settableOnceDTO1);
+IGuidDTO settableOnceGuidDTO1 = new GuidDTO(Guid.NewGuid(), settableOnceDTO1.ID, settableOnceDTO1.Name);
+IGuidDTO settableOnceGuidDTO2 = new GuidDTO(Guid.NewGuid(), settableOnceDTO2.ID, settableOnceDTO2.Name);
+
+IPOCO settableOncePOCO1 = new POCO(settableOnceDTO1, settableOnceGuidDTO1);
 IPOCO settableOncePOCO2 = new POCO();
 
 Console.WriteLine("Debug POCO#1");
 Console.WriteLine(settableOncePOCO1.Debug());
 Console.WriteLine("Trying to set POCO#1.Data");
 settableOncePOCO1.Data = settableOnceDTO2;
+settableOncePOCO1.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO#1");
 Console.WriteLine(settableOncePOCO1.Debug());
 
@@ -95,17 +99,19 @@ Console.WriteLine("Debug POCO#2");
 Console.WriteLine(settableOncePOCO2.Debug());
 Console.WriteLine("Trying to set POCO#2.Data");
 settableOncePOCO2.Data = settableOnceDTO2;
+settableOncePOCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO#2");
 Console.WriteLine(settableOncePOCO2.Debug());
 
 Console.WriteLine("----------POCO2 TESTING----------");
 
-IPOCO<Guid> settableOnceGeneric2POCO = new POCO2<Guid>(settableOnceDTO1, new CustomContainer<Guid>());
+IPOCO<Guid> settableOnceGeneric2POCO = new POCO2<Guid>(settableOnceDTO1, settableOnceGuidDTO1, new CustomContainer<Guid>());
 
 Console.WriteLine("Debug POCO2#1<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO.MyDebug());
 Console.WriteLine("Trying to set POCO2#1<Guid>.Data");
 settableOnceGeneric2POCO.Data = settableOnceDTO2;
+settableOnceGeneric2POCO.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO2#1<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO.MyDebug());
 CustomContainer<Guid> newContainer = new() { Contained = { Guid.NewGuid(), Guid.Empty } };
@@ -114,12 +120,13 @@ settableOnceGeneric2POCO.CustomContainer = newContainer;
 Console.WriteLine("Debug POCO2#1<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO.MyDebug());
 
-IPOCO<Guid> settableOnceGeneric2POCO2 = new POCO2<Guid>(settableOnceDTO1, newContainer);
+IPOCO<Guid> settableOnceGeneric2POCO2 = new POCO2<Guid>(settableOnceDTO1, settableOnceGuidDTO1, newContainer);
 
 Console.WriteLine("Debug POCO2#2<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO2.MyDebug());
 Console.WriteLine("Trying to set POCO2#2<Guid>.Data");
 settableOnceGeneric2POCO2.Data = settableOnceDTO2;
+settableOnceGeneric2POCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO2#2<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO2.MyDebug());
 CustomContainer<Guid> newContainer2 = new() { Contained = { Guid.Empty, Guid.NewGuid() } };
@@ -130,12 +137,13 @@ Console.WriteLine(settableOnceGeneric2POCO2.MyDebug());
 
 Console.WriteLine("----------POCO3 TESTING----------");
 
-IPOCO<int> settableOnceGeneric3POCO = new POCO3(settableOnceDTO1, new CustomContainer<int>());
+IPOCO<int> settableOnceGeneric3POCO = new POCO3(settableOnceDTO1, settableOnceGuidDTO1, new CustomContainer<int>());
 
 Console.WriteLine("Debug POCO3#1");
 Console.WriteLine(settableOnceGeneric3POCO.MyDebug());
 Console.WriteLine("Trying to set POCO3#1.Data");
 settableOnceGeneric3POCO.Data = settableOnceDTO2;
+settableOnceGeneric3POCO.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO3#1");
 Console.WriteLine(settableOnceGeneric3POCO.MyDebug());
 CustomContainer<int> newIntContainer = new() { Contained = { 0, 0, 7 } };
@@ -144,12 +152,13 @@ settableOnceGeneric3POCO.CustomContainer = newIntContainer;
 Console.WriteLine("Debug POCO3#1");
 Console.WriteLine(settableOnceGeneric3POCO.MyDebug());
 
-IPOCO<int> settableOnceGeneric3POCO2 = new POCO3(settableOnceDTO1, newIntContainer);
+IPOCO<int> settableOnceGeneric3POCO2 = new POCO3(settableOnceDTO1, settableOnceGuidDTO1, newIntContainer);
 
 Console.WriteLine("Debug POCO3#2");
 Console.WriteLine(settableOnceGeneric3POCO2.MyDebug());
 Console.WriteLine("Trying to set POCO3#2.Data");
 settableOnceGeneric3POCO2.Data = settableOnceDTO2;
+settableOnceGeneric3POCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO3#2");
 Console.WriteLine(settableOnceGeneric3POCO2.MyDebug());
 CustomContainer<int> newIntContainer2 = new() { Contained = { 5, 6, 6, 5 } };

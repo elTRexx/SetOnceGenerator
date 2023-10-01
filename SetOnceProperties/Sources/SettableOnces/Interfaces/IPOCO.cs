@@ -80,11 +80,11 @@ namespace SetOnceProperties.Sources.SettableOnces.Interfaces
         [SetNTimes(2)]
         IDTO Data { get; set; }
 
-
+        [SetNTimes(1)]
+        IGuidDTO GuidData { get; set; }
 
         public string Debug()
-            => $"POCO with [{(Data == null ? "NULL Data !" : Data.Debug())}]";
-            
+            => $"POCO with [{(Data == null ? "NULL Data !" : Data.Debug())}, {(GuidData == null ? "NULL GuidData !" : GuidData.Debug())}]";
     }
 
     public interface IPOCO<T> : IPOCO

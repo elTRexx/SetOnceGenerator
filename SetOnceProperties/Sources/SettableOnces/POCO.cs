@@ -80,9 +80,10 @@ namespace SetOnceProperties.Sources.SettableOnces
         public POCO()
         { }
 
-        public POCO(IDTO data)
+        public POCO(IDTO data, IGuidDTO guidData)
         {
             ((IPOCO)this).Data = data;
+            ((IPOCO)this).GuidData = guidData;
         }
     }
 }

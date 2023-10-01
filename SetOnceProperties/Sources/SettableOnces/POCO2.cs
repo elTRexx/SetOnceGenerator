@@ -80,9 +80,10 @@ namespace SetOnceProperties.Sources.SettableOnces
         public POCO2()
         { }
 
-        public POCO2(IDTO data, ICustomContainer<T> customContainer)
+        public POCO2(IDTO data, IGuidDTO guidData, ICustomContainer<T> customContainer)
         {
             ((IPOCO<T>)this).Data = data;
+            ((IPOCO<T>)this).GuidData = guidData;
             ((IPOCO<T>)this).CustomContainer = customContainer;
         }
     }

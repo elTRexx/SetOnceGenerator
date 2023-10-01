@@ -96,5 +96,8 @@ namespace SetOnceProperties.Sources.SettableOnces
         }
         public static string Debug(this IDTO dto)
             => $"{(dto.Name ?? "NULL DTO Name")} with [{(dto.ID == default ? "NULL ID" : dto.ID)}] identifier.";
+
+        public static string Debug(this IGuidDTO guidDTO)
+            => $"{(guidDTO.Name ?? "NULL DTO Name")} with [{(guidDTO.ID == default ? "NULL ID" : guidDTO.ID)}] identifier and ({(guidDTO.MyGuid == null ? "NULL Guid" : guidDTO.MyGuid)}).";
     }
 }

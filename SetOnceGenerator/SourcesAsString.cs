@@ -874,6 +874,7 @@ namespace SetOnceGenerator
 
                 FoundCandidate candidateValue = candidate.Value!;
 
+                ///Should be either one (x)or the other, not both.
                 if (candidateValue.IsFoundClassCandidate == candidateValue.IsFoundProperty)
                     continue;
 
@@ -885,7 +886,7 @@ namespace SetOnceGenerator
                     interfacesDefinitions.AddTuple(candidateValue.FoundInterfaceProperty!.Value, candidateValue.Usings);
             }
             ///Filter candidate classes to actual classes to augment
-            var classes = classesCandidates.Where(classCandidate => classCandidate.Item1.ClassSymbol!.Interfaces
+            var classes = classesCandidates.Where(classCandidate => classCandidate.Item1.ClassSymbol!.AllInterfaces
                                                                     .Any(interfaceType => interfacesDefinitions.ContainsInterface(interfaceType)));
 
             IList<ClassToAugment> classesToAugments = new List<ClassToAugment>();
@@ -921,11 +922,12 @@ namespace SetOnceGenerator
                             var interfaceActualTypeParametersNames = interfaceType.TypeArguments.Select(t => t.FormatGenericTypeAliasOrShortName());
 
                             InterfaceDefinition currentInterfaceDefinition = 
-                                new(new TypeName(interfaceDefinition.Item1.TypeName.Name,
-                                                                     interfaceActualTypeParametersNames),
-                                                        interfaceDefinition.Item1.NameSpace,
-                                                        interfaceDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceDefinition.Item1.TypeName.GenericParametersNames!, interfaceActualTypeParametersNames)
-                                                        );
+                                new(
+                                    new TypeName(interfaceDefinition.Item1.TypeName.Name,
+                                                 interfaceActualTypeParametersNames),
+                                    interfaceDefinition.Item1.NameSpace,
+                                    interfaceDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceDefinition.Item1.TypeName.GenericParametersNames!, interfaceActualTypeParametersNames)
+                                   );
 
                             augmentedInterfaces.Add((currentInterfaceDefinition, interfaceDefinition.Item2));
                         }
