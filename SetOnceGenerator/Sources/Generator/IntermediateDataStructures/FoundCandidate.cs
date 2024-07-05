@@ -1,15 +1,15 @@
-﻿#region CeCill-B license
+﻿#region CeCill-C license
 #region English version
-//Copyright Aurélien Pascal Maignan, (20 August 2023) 
+//Copyright Aurélien Pascal Maignan, (30 June 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
-//This software is a computer program whose purpose is
-//to test the source generator software named "SetOnceGenerator"
+//This software is a computer program whose purpose is to automatically generate source code
+//that will, automatically, constrain the set of class's properties up to a given maximum times
 
-//This software is governed by the CeCILL-B license under French law and
+//This software is governed by the CeCILL-C license under French law and
 //abiding by the rules of distribution of free software.  You can  use,
-//modify and/ or redistribute the software under the terms of the CeCILL-B
+//modify and/ or redistribute the software under the terms of the CeCILL-C
 //license as circulated by CEA, CNRS and INRIA at the following URL
 //"http://www.cecill.info". 
 
@@ -31,21 +31,25 @@
 //same conditions as regards security. 
 
 //The fact that you are presently reading this means that you have had
-//knowledge of the CeCILL-B license and that you accept its terms.
+//knowledge of the CeCILL-C license and that you accept its terms.
+
+//The code of the body of GetNamespace() method defined here borrow code itself
+//licensed by the .Net Foundation under MIT license. 
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (20 Août 2023) 
+//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
 
 //aurelien.maignan@protonmail.com
 
-//Ce logiciel est un programme informatique servant à tester
-//le logiciel de generateur de code source dénomé "SetOnceGenerator".
+//Ce logiciel est un programme informatique servant à generer automatique du code source
+//en vue d'appliquer, automatiquement, une contrainte
+//sur le nombre maximum d'accession en écriture d'une propriété de classe.
 
-//Ce logiciel est régi par la licence CeCILL-B soumise au droit français et
+//Ce logiciel est régi par la licence CeCILL-C soumise au droit français et
 //respectant les principes de diffusion des logiciels libres.Vous pouvez
 //utiliser, modifier et/ou redistribuer ce programme sous les conditions
-//de la licence CeCILL-B telle que diffusée par le CEA, le CNRS et l'INRIA 
+//de la licence CeCILL-C telle que diffusée par le CEA, le CNRS et l'INRIA 
 //sur le site "http://www.cecill.info".
 
 //En contrepartie de l'accessibilité au code source et des droits de copie,
@@ -66,24 +70,45 @@
 //à l'utiliser et l'exploiter dans les mêmes conditions de sécurité.
 
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
-//pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
+//pris connaissance de la licence CeCILL-C, et que vous en avez accepté les
 //termes. 
+
+// Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
+// lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
 #endregion 
 #endregion
 
-using SetOnceProperties.Sources.SettableOnces.Interfaces;
+using Microsoft.CodeAnalysis;
 
-namespace SetOnceProperties.Sources.SettableOnces
+/// <summary>
+/// While performing some chained transform in our source generation pipeline,
+/// we are using some custom data structures to better communicate 
+/// between such transformations
+/// </summary>
+namespace SetOnceGenerator
 {
-  internal partial class POCO : IPOCO
+  /// <summary>
+  /// When parsing the <see cref="SyntaxTree"/> store in this structure
+  /// either any found marked properties with the interface in witch it is defined
+  /// as a tuple <see cref="(INamedTypeSymbol, PropertyDefinition)"/>
+  /// and a collection of using statements that this interface 
+  /// decalre as a <see cref="IEnumerable{string}",/>
+  /// or a potential partial class implementing an interface as a <see cref="ClassCandidate"/>
+  /// </summary>
+  public readonly struct FoundCandidate
   {
-    public POCO()
-    { }
+    public ClassCandidate? FoundClass { get; init; }
+    public (INamedTypeSymbol, PropertyDefinition)? FoundInterfaceProperty { get; init; }
+    public IEnumerable<string> Usings { get; init; }
 
-    public POCO(IDTO data, IGuidDTO guidData)
+    public bool IsFoundClassCandidate => FoundClass != null;
+    public bool IsFoundProperty => FoundInterfaceProperty != null;
+
+    public FoundCandidate(ClassCandidate? classCandidate, (INamedTypeSymbol, PropertyDefinition)? interfaceProperty, IEnumerable<string> usings)
     {
-      ((IPOCO)this).Data = data;
-      ((IPOCO)this).GuidData = guidData;
+      FoundClass = classCandidate;
+      FoundInterfaceProperty = interfaceProperty;
+      Usings = usings;
     }
   }
 }

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Profil 1": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\SetOnceProperties\\SetOnceProperties.csproj"
+    },
+    "Profil 2": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\CrossProjectTesting\\CrossProjectTesting.csproj"
+    }
+  }
+}

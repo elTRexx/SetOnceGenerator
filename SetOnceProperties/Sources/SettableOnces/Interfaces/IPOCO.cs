@@ -75,23 +75,23 @@ using SetOnceGenerator;
 
 namespace SetOnceProperties.Sources.SettableOnces.Interfaces
 {
-    public interface IPOCO
-    {
-        [SetNTimes(2)]
-        IDTO Data { get; set; }
+  public interface IPOCO
+  {
+    [SetNTimes(2)]
+    IDTO Data { get; set; }
 
-        [SetNTimes(1)]
-        IGuidDTO GuidData { get; set; }
+    [SetNTimes(1)]
+    IGuidDTO GuidData { get; set; }
 
-        public string Debug()
-            => $"POCO with [{(Data == null ? "NULL Data !" : Data.Debug())}, {(GuidData == null ? "NULL GuidData !" : GuidData.Debug())}]";
-    }
+    public string Debug()
+        => $"POCO with [{(Data == null ? "NULL Data !" : Data.Debug())}, {(GuidData == null ? "NULL GuidData !" : GuidData.Debug())}]";
+  }
 
-    public interface IPOCO<T> : IPOCO
-    {
-        [SetNTimes(2)]
-        ICustomContainer<T> CustomContainer { get; set; }
-        public string MyDebug()
-        => Debug() + $"\n and {CustomContainer.GetType().GetRealTypeName()} : {CustomContainer}";
-    }
+  public interface IPOCO<T> : IPOCO
+  {
+    [SetNTimes(2)]
+    ICustomContainer<T> CustomContainer { get; set; }
+    public string MyDebug()
+    => Debug() + $"\n and {CustomContainer.GetType().GetRealTypeName()} : {CustomContainer}";
+  }
 }

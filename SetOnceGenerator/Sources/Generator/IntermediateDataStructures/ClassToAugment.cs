@@ -1,6 +1,6 @@
 ﻿#region CeCill-C license
 #region English version
-//Copyright Aurélien Pascal Maignan, (20 August 2023) 
+//Copyright Aurélien Pascal Maignan, (30 June 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
@@ -32,10 +32,13 @@
 
 //The fact that you are presently reading this means that you have had
 //knowledge of the CeCILL-C license and that you accept its terms.
+
+//The code of the body of GetNamespace() method defined here borrow code itself
+//licensed by the .Net Foundation under MIT license. 
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (20 Août 2023) 
+//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
 
 //aurelien.maignan@protonmail.com
 
@@ -69,37 +72,44 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-C, et que vous en avez accepté les
 //termes. 
+
+// Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
+// lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
 #endregion 
 #endregion
 
 using Microsoft.CodeAnalysis;
-using static SetOnceGenerator.SourcesAsString;
 
+/// <summary>
+/// While performing some chained transform in our source generation pipeline,
+/// we are using some custom data structures to better communicate 
+/// between such transformations
+/// </summary>
 namespace SetOnceGenerator
 {
-    [Generator(LanguageNames.CSharp)]
-    public sealed class SetNTimesGenerator : IIncrementalGenerator
+  /// <summary>
+  /// This structure strore any found potential <see cref="ClassCandidate"/> in the semamtic transform step
+  /// that have any interfaces (both thoses directly declared and their ancestors)
+  /// matching those found in the same semantic transform step as <see cref="InterfaceDeclarationSyntax"/>.
+  /// Storing its namespace as a <see cref="string"/>, its symbol as a <see cref="INamedTypeSymbol"/>,
+  /// a collection of using statements that this class decalre as a <see cref="HashSet{string}"/>
+  /// and a collection of interfaces, this class implement, 
+  /// that have any property marked as [SetOnce] / [SetNTimes(n)] as a <see cref="HashSet{InterfaceDefinition}"/>
+  /// </summary>
+  public readonly struct ClassToAugment
+  {
+    public string Namespace { get; init; }
+    public HashSet<string> UsingNamespaces { get; init; }
+    public INamedTypeSymbol ClassType { get; init; }
+    public HashSet<InterfaceDefinition> InterfacesDefinitions { get; init; }
+
+    public ClassToAugment(INamedTypeSymbol classType, string @namespace)
     {
-        public void Initialize(IncrementalGeneratorInitializationContext context)
-        {
-            context.RegisterPostInitializationOutput
-                (@context =>
-                {
-                    @context.AddSource("SettableNTimesProperty.g.cs", GetSettableNTimesCode());
-                    @context.AddSource("SetNTimesAttribute.g.cs", GetSetNTimesAttributeCode());
-                });
-
-            var pipeline = context.SyntaxProvider
-                ///Would be nice to use it instead, but doing so it prevent us to traverse Syntax Trees
-                ///to find any "partiacl class" candidate to be augmented
-                //.ForAttributeWithMetadataName(SourcesAsString.SetOnceAttributeFullName, SourcesAsString.SyntacticPredicate, SourcesAsString.SemanticTransform)
-                .CreateSyntaxProvider(SyntacticPredicate, SemanticTransform)
-                .Where(found => found is not null && found.HasValue)
-                .Collect()
-                .Select(TransformType)
-                ;
-
-            context.RegisterSourceOutput(pipeline, Execute);
-        }
+      Namespace = @namespace;
+      ClassType = classType;
+      /// Force adding SetOnceGenerator namespace.
+      UsingNamespaces = new HashSet<string>() { $"using {nameof(SetOnceGenerator)};" };
+      InterfacesDefinitions = new HashSet<InterfaceDefinition>();
     }
+  }
 }

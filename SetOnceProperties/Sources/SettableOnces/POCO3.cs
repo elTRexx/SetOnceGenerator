@@ -32,7 +32,7 @@
 
 //The fact that you are presently reading this means that you have had
 //knowledge of the CeCILL-B license and that you accept its terms.
- 
+
 #endregion
 
 #region French version
@@ -69,23 +69,23 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
 //termes. 
-#endregion 
+#endregion
 #endregion
 
 using SetOnceProperties.Sources.SettableOnces.Interfaces;
 
 namespace SetOnceProperties.Sources.SettableOnces
 {
-    internal partial class POCO3 : IPOCO<int>
-    {
-        public POCO3()
-        { }
+  internal partial class POCO3 : IPOCO<int>
+  {
+    public POCO3()
+    { }
 
-        public POCO3(IDTO data, IGuidDTO guidData, ICustomContainer<int> customContainer)
-        {
-            ((IPOCO<int>)this).Data = data;
-            ((IPOCO<int>)this).GuidData = guidData;
-            ((IPOCO<int>)this).CustomContainer = customContainer;
-        }
+    public POCO3(IDTO data, IGuidDTO guidData, ICustomContainer<int> customContainer)
+    {
+      ((IPOCO<int>)this).Data = data;
+      ((IPOCO<int>)this).GuidData = guidData;
+      ((IPOCO<int>)this).CustomContainer = customContainer;
     }
+  }
 }

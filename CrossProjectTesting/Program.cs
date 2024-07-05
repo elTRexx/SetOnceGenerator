@@ -1,6 +1,6 @@
 ﻿#region CeCill-B license
 #region English version
-//Copyright Aurélien Pascal Maignan, (20 August 2023) 
+//Copyright Aurélien Pascal Maignan, (30 June 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
@@ -35,7 +35,7 @@
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (20 Août 2023) 
+//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
 
 //aurelien.maignan@protonmail.com
 
@@ -71,19 +71,38 @@
 #endregion 
 #endregion
 
-using SetOnceProperties.Sources.SettableOnces.Interfaces;
+using CrossProjectTesting.Sources;
+using CrossProjectTesting.Sources.Interfaces;
 
-namespace SetOnceProperties.Sources.SettableOnces
-{
-  internal partial class POCO : IPOCO
-  {
-    public POCO()
-    { }
+Console.WriteLine("Testing cross project settable once properties.");
 
-    public POCO(IDTO data, IGuidDTO guidData)
-    {
-      ((IPOCO)this).Data = data;
-      ((IPOCO)this).GuidData = guidData;
-    }
-  }
-}
+bool boolValue = true;
+
+IBoolDTO myBool = new BoolDTO(boolValue);
+
+Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+
+boolValue = !boolValue;
+
+Console.WriteLine($"#1 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
+
+myBool.MyBool = boolValue;
+
+Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+
+boolValue = !boolValue;
+
+Console.WriteLine($"#2 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
+
+myBool.MyBool = boolValue;
+
+Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+
+boolValue = !boolValue;
+
+Console.WriteLine($"#3 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
+
+myBool.MyBool = boolValue;
+
+Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+

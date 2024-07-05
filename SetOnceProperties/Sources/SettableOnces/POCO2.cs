@@ -75,16 +75,16 @@ using SetOnceProperties.Sources.SettableOnces.Interfaces;
 
 namespace SetOnceProperties.Sources.SettableOnces
 {
-    internal partial class POCO2<T> : IPOCO<T>
-    {
-        public POCO2()
-        { }
+  internal partial class POCO2<T> : IPOCO<T>
+  {
+    public POCO2()
+    { }
 
-        public POCO2(IDTO data, IGuidDTO guidData, ICustomContainer<T> customContainer)
-        {
-            ((IPOCO<T>)this).Data = data;
-            ((IPOCO<T>)this).GuidData = guidData;
-            ((IPOCO<T>)this).CustomContainer = customContainer;
-        }
+    public POCO2(IDTO data, IGuidDTO guidData, ICustomContainer<T> customContainer)
+    {
+      ((IPOCO<T>)this).Data = data;
+      ((IPOCO<T>)this).GuidData = guidData;
+      ((IPOCO<T>)this).CustomContainer = customContainer;
     }
+  }
 }

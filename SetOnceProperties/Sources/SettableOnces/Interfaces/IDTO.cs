@@ -75,12 +75,12 @@ using SetOnceGenerator;
 
 namespace SetOnceProperties.Sources.SettableOnces.Interfaces
 {
-    public interface IDTO
-    {
-        [SetOnce]
-        int ID { get; set; }
+  public interface IDTO
+  {
+    [SetOnce]
+    int ID { get; set; }
 
-        [SetOnce]
-        string Name { get; set; }        
-    }
+    [SetOnce]
+    string Name { get; set; }
+  }
 }

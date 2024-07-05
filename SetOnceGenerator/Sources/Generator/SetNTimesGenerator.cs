@@ -1,15 +1,15 @@
-﻿#region CeCill-B license
+﻿#region CeCill-C license
 #region English version
 //Copyright Aurélien Pascal Maignan, (20 August 2023) 
 
 //[aurelien.maignan@protonmail.com]
 
-//This software is a computer program whose purpose is
-//to test the source generator software named "SetOnceGenerator"
+//This software is a computer program whose purpose is to automatically generate source code
+//that will, automatically, constrain the set of class's properties up to a given maximum times
 
-//This software is governed by the CeCILL-B license under French law and
+//This software is governed by the CeCILL-C license under French law and
 //abiding by the rules of distribution of free software.  You can  use,
-//modify and/ or redistribute the software under the terms of the CeCILL-B
+//modify and/ or redistribute the software under the terms of the CeCILL-C
 //license as circulated by CEA, CNRS and INRIA at the following URL
 //"http://www.cecill.info". 
 
@@ -31,7 +31,7 @@
 //same conditions as regards security. 
 
 //The fact that you are presently reading this means that you have had
-//knowledge of the CeCILL-B license and that you accept its terms.
+//knowledge of the CeCILL-C license and that you accept its terms.
 #endregion
 
 #region French version
@@ -39,13 +39,14 @@
 
 //aurelien.maignan@protonmail.com
 
-//Ce logiciel est un programme informatique servant à tester
-//le logiciel de generateur de code source dénomé "SetOnceGenerator".
+//Ce logiciel est un programme informatique servant à generer automatique du code source
+//en vue d'appliquer, automatiquement, une contrainte
+//sur le nombre maximum d'accession en écriture d'une propriété de classe.
 
-//Ce logiciel est régi par la licence CeCILL-B soumise au droit français et
+//Ce logiciel est régi par la licence CeCILL-C soumise au droit français et
 //respectant les principes de diffusion des logiciels libres.Vous pouvez
 //utiliser, modifier et/ou redistribuer ce programme sous les conditions
-//de la licence CeCILL-B telle que diffusée par le CEA, le CNRS et l'INRIA 
+//de la licence CeCILL-C telle que diffusée par le CEA, le CNRS et l'INRIA 
 //sur le site "http://www.cecill.info".
 
 //En contrepartie de l'accessibilité au code source et des droits de copie,
@@ -66,24 +67,40 @@
 //à l'utiliser et l'exploiter dans les mêmes conditions de sécurité.
 
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
-//pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
+//pris connaissance de la licence CeCILL-C, et que vous en avez accepté les
 //termes. 
 #endregion 
 #endregion
 
-using SetOnceProperties.Sources.SettableOnces.Interfaces;
+using Microsoft.CodeAnalysis;
+using static SetOnceGenerator.Pipeline;
+using static SetOnceGenerator.SourcesAsString;
 
-namespace SetOnceProperties.Sources.SettableOnces
+namespace SetOnceGenerator
 {
-  internal partial class POCO : IPOCO
+  [Generator(LanguageNames.CSharp)]
+  public sealed class SetNTimesGenerator : IIncrementalGenerator
   {
-    public POCO()
-    { }
-
-    public POCO(IDTO data, IGuidDTO guidData)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-      ((IPOCO)this).Data = data;
-      ((IPOCO)this).GuidData = guidData;
+      context.RegisterPostInitializationOutput
+          (@context =>
+          {
+            @context.AddSource("SettableNTimesProperty.g.cs", GetSettableNTimesCode());
+            @context.AddSource("SetNTimesAttribute.g.cs", GetSetNTimesAttributeCode());
+          });
+
+      var pipeline = context.SyntaxProvider
+          ///Would be nice to use it instead, but doing so it prevent us to traverse Syntax Trees
+          ///to find any "partiacl class" candidate to be augmented
+          //.ForAttributeWithMetadataName(SourcesAsString.SetOnceAttributeFullName, SourcesAsString.SyntacticPredicate, SourcesAsString.SemanticTransform)
+          .CreateSyntaxProvider(SyntacticPredicate, SemanticTransform)
+          .Where(found => found is not null && found.HasValue)
+          .Collect()
+          .Select(TransformType)
+          ;
+
+      context.RegisterSourceOutput(pipeline, Execute);
     }
   }
 }

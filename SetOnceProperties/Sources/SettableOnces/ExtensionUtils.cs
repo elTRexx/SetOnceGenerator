@@ -76,28 +76,28 @@ using System.Text;
 
 namespace SetOnceProperties.Sources.SettableOnces
 {
-    public static class ExtensionUtils
+  public static class ExtensionUtils
+  {
+    public static void Warn()
+        => Console.WriteLine("Can not set property, maximum settable times reached !");
+
+    public static string GetRealTypeName(this Type t)
     {
-        public static void Warn()
-            => Console.WriteLine("Can not set property, maximum settable times reached !");
+      if (!t.IsGenericType)
+        return t.Name;
 
-        public static string GetRealTypeName(this Type t)
-        {
-            if (!t.IsGenericType)
-                return t.Name;
+      StringBuilder sb = new();
+      sb.Append(t.Name[..t.Name.IndexOf('`')]);
+      sb.Append('<');
+      sb.Append(string.Join(", ", t.GetGenericArguments().Select(type => type.GetRealTypeName())));
 
-            StringBuilder sb = new();
-            sb.Append(t.Name[..t.Name.IndexOf('`')]);
-            sb.Append('<');
-            sb.Append(string.Join(", ", t.GetGenericArguments().Select(type => type.GetRealTypeName())));
-
-            sb.Append('>');
-            return sb.ToString();
-        }
-        public static string Debug(this IDTO dto)
-            => $"{(dto.Name ?? "NULL DTO Name")} with [{(dto.ID == default ? "NULL ID" : dto.ID)}] identifier.";
-
-        public static string Debug(this IGuidDTO guidDTO)
-            => $"{(guidDTO.Name ?? "NULL DTO Name")} with [{(guidDTO.ID == default ? "NULL ID" : guidDTO.ID)}] identifier and ({(guidDTO.MyGuid == null ? "NULL Guid" : guidDTO.MyGuid)}).";
+      sb.Append('>');
+      return sb.ToString();
     }
+    public static string Debug(this IDTO dto)
+        => $"{(dto.Name ?? "NULL DTO Name")} with [{(dto.ID == default ? "NULL ID" : dto.ID)}] identifier.";
+
+    public static string Debug(this IGuidDTO guidDTO)
+        => $"{(guidDTO.Name ?? "NULL DTO Name")} with [{(guidDTO.ID == default ? "NULL ID" : guidDTO.ID)}] identifier and ({(guidDTO.MyGuid == null ? "NULL Guid" : guidDTO.MyGuid)}).";
+  }
 }

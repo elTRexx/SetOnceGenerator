@@ -73,8 +73,8 @@
 
 namespace SetOnceProperties.Sources.SettableOnces.Interfaces
 {
-    public interface ICustomContainer<T>
-    {     
-        ICollection<T> Contained { get; set; }
-    }
+  public interface ICustomContainer<T>
+  {
+    ICollection<T> Contained { get; set; }
+  }
 }

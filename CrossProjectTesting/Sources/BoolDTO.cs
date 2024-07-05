@@ -1,6 +1,6 @@
 ﻿#region CeCill-B license
 #region English version
-//Copyright Aurélien Pascal Maignan, (20 August 2023) 
+//Copyright Aurélien Pascal Maignan, (30 June 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
@@ -35,7 +35,7 @@
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (20 Août 2023) 
+//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
 
 //aurelien.maignan@protonmail.com
 
@@ -71,19 +71,19 @@
 #endregion 
 #endregion
 
-using SetOnceProperties.Sources.SettableOnces.Interfaces;
+using CrossProjectTesting.Sources.Interfaces;
 
-namespace SetOnceProperties.Sources.SettableOnces
+namespace CrossProjectTesting.Sources
 {
-  internal partial class POCO : IPOCO
+  internal partial class BoolDTO : IBoolDTO
   {
-    public POCO()
-    { }
-
-    public POCO(IDTO data, IGuidDTO guidData)
+    public BoolDTO(bool myBool)
     {
-      ((IPOCO)this).Data = data;
-      ((IPOCO)this).GuidData = guidData;
+      ((IBoolDTO)this).MyBool = myBool;
     }
+
+    //public int ID { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    //public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    //public bool MyBool { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
   }
 }

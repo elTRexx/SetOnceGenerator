@@ -1,15 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-	<LangVersion>11.0</LangVersion>
+	<IsRoslynComponent>true</IsRoslynComponent>
+	<TargetFramework>netstandard2.0</TargetFramework>
+	<LangVersion>latest</LangVersion>
 	<IncludeBuildOutput>false</IncludeBuildOutput>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.1.4</Version>
-	<PackageVersion>0.1.4</PackageVersion>
-	<PackageReleaseNotes>Correctly allow several interface chained "inheritance" where some [SetOnce/SetNTimes()] properties could be definied anywhere in this hierarchy, not only inside the last interface</PackageReleaseNotes>
+	<Version>0.1.9</Version>
+	<PackageVersion>0.1.9</PackageVersion>
+	<PackageReleaseNotes>Handle multiple/cross projects types when generating settableNtimes properties and ensure usign SetOnceGenerator always added to generated files. Code refactored</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>
@@ -23,16 +24,24 @@
 	<RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
+	<ItemGroup>
+		<Compile Remove="Embedded\**\*.cs" />
+		<EmbeddedResource Include="..\SetOnceGenerator.Attributes\*.cs" Link="Embedded\Sources\%(Filename)%(Extension)" WithCulture="false" />
+	</ItemGroup>
+	
   <ItemGroup>
     <Compile Remove="Deprecated\**" />
+    <Compile Remove="lib\**" />
     <EmbeddedResource Remove="Deprecated\**" />
+    <EmbeddedResource Remove="lib\**" />
     <None Remove="Deprecated\**" />
+    <None Remove="lib\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" PrivateAssets="all" />
 	<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="False" />
-	<None Include="readme.md" Pack="true" PackagePath="\"/>
+	<None Include="readme.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -46,6 +55,30 @@
 			<PackagePath>build\$(TargetFramework)\</PackagePath>
 			<PackageCopyToOutput>false</PackageCopyToOutput>
 		</None>
+	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <None Include="lib\netstandard2.0\_._">
+	    <Pack>true</Pack>
+	    <PackagePath>lib\$(TargetFramework)\</PackagePath>
+	    <PackageCopyToOutput>false</PackageCopyToOutput>
+	  </None>
+	</ItemGroup>-->
+
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).Attributes.dll">
+			<Pack>true</Pack>
+			<PackagePath>lib\$(TargetFramework)\</PackagePath>
+			<Visible>true</Visible>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Embedded\Sources\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\SetOnceGenerator.Attributes\SetOnceGenerator.Attributes.csproj" PrivateAssets="all" />
 	</ItemGroup>
 	
 </Project>

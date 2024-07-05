@@ -75,16 +75,16 @@ using SetOnceProperties.Sources.SettableOnces.Interfaces;
 
 namespace SetOnceProperties.Sources.SettableOnces
 {
-    internal class CustomContainer<T> : ICustomContainer<T>
+  internal class CustomContainer<T> : ICustomContainer<T>
+  {
+    public ICollection<T> Contained { get; set; }
+
+    public CustomContainer()
     {
-        public ICollection<T> Contained { get; set; }
-
-        public CustomContainer()
-        {
-            Contained = new HashSet<T>();
-        }
-
-        public override string ToString()
-            => $"[{string.Join(", ", Contained)}]";
+      Contained = new HashSet<T>();
     }
+
+    public override string ToString()
+        => $"[{string.Join(", ", Contained)}]";
+  }
 }

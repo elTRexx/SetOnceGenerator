@@ -10,8 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <ProjectReference Include="..\SetOnceGenerator.Attributes\SetOnceGenerator.Attributes.csproj" />
 	  <ProjectReference Include="..\SetOnceGenerator\SetOnceGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+	  <ProjectReference Include="..\SetOnceGenerator.Attributes\SetOnceGenerator.Attributes.csproj" />
+	  <ProjectReference Include="..\SetOnceProperties\SetOnceProperties.csproj" />
   </ItemGroup>
 
 </Project>

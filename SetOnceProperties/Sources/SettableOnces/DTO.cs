@@ -75,12 +75,12 @@ using SetOnceProperties.Sources.SettableOnces.Interfaces;
 
 namespace SetOnceProperties.Sources.SettableOnces
 {
-    internal partial class DTO : IDTO
+  internal partial class DTO : IDTO
+  {
+    public DTO(int id, string name = "Default_DTO_Name")
     {
-        public DTO(int id, string name = "Default_DTO_Name")
-        {
-            ((IDTO)this).ID = id;
-            ((IDTO)this).Name = name;
-        }
+      ((IDTO)this).ID = id;
+      ((IDTO)this).Name = name;
     }
+  }
 }

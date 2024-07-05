@@ -74,25 +74,24 @@
 //Uncomment this class if you want to handle your custom warnings when a SettableNTimes property
 //is being set above it's maximum allowed settable times, 
 //and/or when trying to get such a not yet setted property.
- 
 /*
 namespace SetOnceGenerator
 {
-    public partial class SettableNTimesProperty<T>
+  internal partial class SettableNTimesProperty<T>
+  {
+    partial void GetWarning()
     {
-        partial void GetWarning()
-        {
-            // Add your implementation here.
-            // Example :
-            //Console.WriteLine($"{_propertyName} hasn't been set yet ! (returning default value instead)");
-        }
-
-        partial void SetWarning()
-        {
-            // Add your implementation here.
-            // Example :
-            //Console.WriteLine($"{_propertyName} has already reach its maximum ({_maximumSettableTimes}) settable times.");
-        }
+      // Add your implementation here.
+      // Example :
+      //Console.WriteLine($"{_propertyName} hasn't been set yet ! (returning default value instead)");
     }
+
+    partial void SetWarning()
+    {
+      // Add your implementation here.
+      // Example :
+      //Console.WriteLine($"{_propertyName} has already reach its maximum ({_maximumSettableTimes}) settable times.");
+    }
+  }
 }
 */
