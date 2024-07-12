@@ -1225,7 +1225,7 @@ You can modify the 2 provided partial methods, `GetWarning()` and `SetWarning()`
 
 `SettableNTimesProperty` class also expose 2 private fields you can use to customize your warning :
 
-- `_propertyName`` the name of the property
+- `_propertyName` the name of the property
 
 - `_maximumSettableTimes` the maximum settable times this property can be setted
 
