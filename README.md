@@ -1268,7 +1268,7 @@ If you don't wan't to handle you custom logic of `Get` and `Set` warning, and al
 
 ## Embedding attributes
 
-Following Andrew Lock <https://andrewlock.net/creating-a-source-generator-part-8-solving-the-source-generator-marker-attribute-problem-part2/> tutorial,
+Following [Andrew Lock](https://andrewlock.net/creating-a-source-generator-part-8-solving-the-source-generator-marker-attribute-problem-part2/) tutorial,
 
 I ended up using a public attributes DLL to store and share my `[SetNTimes(n)]` and `[SetOnce]` attributes,
 
