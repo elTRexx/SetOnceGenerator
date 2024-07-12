@@ -8,9 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.1.9</Version>
-	<PackageVersion>0.1.9</PackageVersion>
-	<PackageReleaseNotes>Handle multiple/cross projects types when generating settableNtimes properties and ensure usign SetOnceGenerator always added to generated files. Code refactored</PackageReleaseNotes>
+	<Version>0.1.5</Version>
+	<PackageVersion>0.1.5</PackageVersion>
+	<PackageReleaseNotes>Handle multiple/cross projects types when generating settableNtimes properties and ensure "using SetOnceGenerator" is always added to generated files. Code has been refactored</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>
