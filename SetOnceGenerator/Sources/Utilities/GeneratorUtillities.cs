@@ -521,7 +521,6 @@ namespace SetOnceGenerator
             .Select((item, index) => new { Item = item, Index = index })
             .FirstOrDefault(_ => _.Item?.Equals(itemToFind) ?? false)?.Index ?? -1;
 
-    #region deprecated
     /// <summary>
     /// Syntax sugar to test if a <see cref="ClassDeclarationSyntax"/> 
     /// has a given <see cref="SyntaxKind"/> modifier
@@ -538,6 +537,7 @@ namespace SetOnceGenerator
     public static bool IsInterfaceType(this ITypeSymbol typeSymbol)
       => typeSymbol?.TypeKind == TypeKind.Interface;
 
+    #region deprecated
     /// <summary>
     /// Check if a <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string}}"/> 
     /// contains a given <see cref="INamedTypeSymbol"/> interface symbol
