@@ -100,16 +100,17 @@ namespace SetOnceGenerator
   {
     public string Namespace { get; init; }
     public HashSet<string> UsingNamespaces { get; init; }
-    public INamedTypeSymbol ClassType { get; init; }
-    public HashSet<InterfaceDefinition> InterfacesDefinitions { get; init; }
+    public TypeName TypeName { get; init; }
+    public HashSet<InterfaceOrAbstractDefinition> InterfacesOrAbstractsDefinitions { get; init; }
 
-    public ClassToAugment(INamedTypeSymbol classType, string @namespace)
+    public ClassToAugment(TypeName typeName, string @namespace, HashSet<string>? usingNamespaces = default, HashSet<InterfaceOrAbstractDefinition>? interfacesOrAbstractsDefinitions = default)
     {
       Namespace = @namespace;
-      ClassType = classType;
+      TypeName = typeName;
+      UsingNamespaces = usingNamespaces ?? [];
       /// Force adding SetOnceGenerator namespace.
-      UsingNamespaces = new HashSet<string>() { $"using {nameof(SetOnceGenerator)};" };
-      InterfacesDefinitions = new HashSet<InterfaceDefinition>();
+      UsingNamespaces.UnionWith([$"using {nameof(SetOnceGenerator)};"]);
+      InterfacesOrAbstractsDefinitions = interfacesOrAbstractsDefinitions ?? [];
     }
   }
 }

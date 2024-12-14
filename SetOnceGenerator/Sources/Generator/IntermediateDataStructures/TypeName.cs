@@ -88,8 +88,10 @@ using Microsoft.CodeAnalysis;
 namespace SetOnceGenerator
 {
   /// <summary>
-  /// Simple struct to store a Type's name as a <see cref="string"/>
-  /// and its potential generic types parameters
+  /// Simple struct to store a Type's name as a <see cref="string"/>,
+  /// its potential generic types parameters, if it correspond to an abstract class
+  /// and the corresponding type accessibility and modifiers
+  /// (note: modifiers already include accessibility).
   /// </summary>
   public readonly struct TypeName : IEquatable<TypeName>
   {

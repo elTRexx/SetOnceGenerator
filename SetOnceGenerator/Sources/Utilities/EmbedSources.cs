@@ -12,8 +12,6 @@ namespace SetOnceGenerator
   {
     const string EMBEDING_ATTRIBUTES = "SET_ONCE_GENERATOR_EMBED_ATTRIBUTES";
 
-    //private static readonly Assembly _thisAssembly = typeof(SetOnceAttribute).Assembly;
-
     public static string LoadSourceCode(string sourceName)
     {
       var _thisAssembly = typeof(EmbedSources).Assembly;

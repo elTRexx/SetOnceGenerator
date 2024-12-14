@@ -76,6 +76,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Linq;
 using static SetOnceGenerator.GeneratorUtillities;
 using static SetOnceGenerator.SourcesAsString;
 
@@ -108,9 +109,12 @@ namespace SetOnceGenerator
         return true;
 
       ///What we are mainly looking for is for Property with an [SetOnce] or [SetNTimes(n)] attribute
-      return node is PropertyDeclarationSyntax propertyDeclarationSyntax
+      if (node is PropertyDeclarationSyntax propertyDeclarationSyntax
           && propertyDeclarationSyntax.AttributeLists.Count > 0
-          && node.Ancestors().OfType<InterfaceDeclarationSyntax>().Any();
+          && node.Ancestors().OfType<TypeDeclarationSyntax>().Any())
+        //&& node.Ancestors().OfType<InterfaceDeclarationSyntax>().Any())
+        return true;
+      return false;
     }
 
     /// <summary>
@@ -127,24 +131,27 @@ namespace SetOnceGenerator
 
       INamedTypeSymbol? classCandidateType = null;
       IPropertySymbol? property = null;
-      IEnumerable<string> usingDirectiveSyntaxes = new HashSet<string>();
+      HashSet<string> usingDirectiveSyntaxes = [];
       string classNamespace = "";
       BaseTypeDeclarationSyntax? baseTypeDeclarationSyntax = default;
       ClassCandidate? classCandidate = null;
-      (INamedTypeSymbol, PropertyDefinition)? interfaceProperty = null;
+      (INamedTypeSymbol, PropertyDefinition)? interfaceOrAbstractProperty = null;
 
       var syntaxRoot = context.Node.Ancestors().OfType<CompilationUnitSyntax>().SingleOrDefault();
 
       if (syntaxRoot == null)
         return null;
 
-      usingDirectiveSyntaxes = syntaxRoot.DescendantNodes().OfType<UsingDirectiveSyntax>().Distinct().Select(usingDirectiveSyntax => usingDirectiveSyntax.ToString());
+      usingDirectiveSyntaxes = new HashSet<string>(syntaxRoot.DescendantNodes().OfType<UsingDirectiveSyntax>().Distinct().Select(usingDirectiveSyntax => usingDirectiveSyntax.ToString()));
 
       if (context.Node is ClassDeclarationSyntax classDeclarationSyntax)
       {
         baseTypeDeclarationSyntax = classDeclarationSyntax;
         classCandidateType = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax, cancellationToken);
-        if (classCandidateType == null || !classCandidateType.Interfaces.Any())
+        if (classCandidateType == null
+        || (!classCandidateType.Interfaces.Any()
+            &&
+           (classCandidateType.BaseType == null || !classCandidateType.BaseType.IsAbstractClass())))
           return null;
 
         classNamespace = ToStringUtilities.GetNamespace(classDeclarationSyntax);
@@ -154,22 +161,29 @@ namespace SetOnceGenerator
       {
         property = context.SemanticModel.GetDeclaredSymbol(propertyDeclarationSyntax, cancellationToken);
 
-        var propertyDefinition = property?.GetPropertyDefinition();
+        string modifiers = propertyDeclarationSyntax.GetModifiersAsString();
+
+        var propertyDefinition = property?.GetPropertyDefinition(modifiers);
 
         if (!propertyDefinition.HasValue)
           return null;
 
-        var interfaceDeclarationSyntax = context.Node.Ancestors().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
-        if (interfaceDeclarationSyntax == null)
+        var interfaceOrAbstractDeclarationSyntax = context.Node.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        if (interfaceOrAbstractDeclarationSyntax == null)
           return null;
 
-        var interfaceType = context.SemanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax, cancellationToken);
-        if (interfaceType == null)
+        if (interfaceOrAbstractDeclarationSyntax is not InterfaceDeclarationSyntax @interface
+            && (interfaceOrAbstractDeclarationSyntax is not ClassDeclarationSyntax @class
+              || !@class.HasKind(SyntaxKind.AbstractKeyword)))
           return null;
 
-        interfaceProperty = (interfaceType, propertyDefinition.Value);
+        var interfaceOrAbstractType = context.SemanticModel.GetDeclaredSymbol(interfaceOrAbstractDeclarationSyntax, cancellationToken);
+        if (interfaceOrAbstractType == null)
+          return null;
 
-        baseTypeDeclarationSyntax = interfaceDeclarationSyntax;
+        interfaceOrAbstractProperty = (interfaceOrAbstractType, propertyDefinition.Value);
+
+        baseTypeDeclarationSyntax = interfaceOrAbstractDeclarationSyntax;
       }
       else
         return null;
@@ -178,12 +192,10 @@ namespace SetOnceGenerator
       string usingNamespaces = string.IsNullOrWhiteSpace(@namespace) ? "" : $"using {@namespace};";
 
       if (!usingDirectiveSyntaxes.Contains(usingNamespaces))
-        usingDirectiveSyntaxes = usingDirectiveSyntaxes.Concat(new string[] { usingNamespaces });
+        usingDirectiveSyntaxes.UnionWith([usingNamespaces]);
 
-      return new FoundCandidate(classCandidate, interfaceProperty, usingDirectiveSyntaxes);
+      return new FoundCandidate(classCandidate, interfaceOrAbstractProperty, usingDirectiveSyntaxes);
     }
-
-
 
     /// <summary>
     /// Second transformation applied to previously generated <see cref="FoundCandidate"/> by <see cref="SemanticTransform(GeneratorSyntaxContext, CancellationToken)"/>
@@ -194,8 +206,8 @@ namespace SetOnceGenerator
     /// transformed into its <see cref="ClassToAugment"/> data representation as a <see cref="IList{ClassToAugment}"/></returns>
     public static IList<ClassToAugment> TransformType(ImmutableArray<FoundCandidate?> candidates, CancellationToken cancellationToken)
     {
-      HashSet<(ClassCandidate, IEnumerable<string>)> classesCandidates = new();
-      HashSet<(InterfaceDefinition, IEnumerable<string>)> interfacesDefinitions = new();
+      HashSet<(ClassCandidate, HashSet<string>)> classesCandidates = [];
+      HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions = [];
 
       foreach (var candidate in candidates)
       {
@@ -204,34 +216,43 @@ namespace SetOnceGenerator
         if (!candidate.HasValue)
           continue;
 
-        FoundCandidate candidateValue = candidate.Value!;
+        FoundCandidate foundCandidate = candidate.Value!;
 
         ///Should be either one (x)or the other, not both.
-        if (candidateValue.IsFoundClassCandidate == candidateValue.IsFoundProperty)
+        if (foundCandidate.IsFoundClassCandidate == foundCandidate.IsFoundProperty)
           continue;
 
-        if (candidateValue.IsFoundClassCandidate
-            && !classesCandidates.Any(candidate => SymbolEqualityComparer.Default.Equals(candidate.Item1.ClassType, candidateValue.FoundClass!.Value.ClassType)))
+        if (foundCandidate.IsFoundClassCandidate
+            && !classesCandidates.Any(candidate => SymbolEqualityComparer.Default.Equals(candidate.Item1.ClassType, foundCandidate.FoundClass!.Value.ClassType)))
         {
-          classesCandidates.Add((candidateValue.FoundClass!.Value, candidateValue.Usings));
+          classesCandidates.Add((foundCandidate.FoundClass!.Value, foundCandidate.Usings));
           continue;
         }
-        if (candidateValue.IsFoundProperty)
-          interfacesDefinitions.AddTuple(candidateValue.FoundInterfaceProperty!.Value, candidateValue.Usings);
+        if (foundCandidate.IsFoundProperty)
+          interfacesOrAbstractDefinitions.AddTuple(foundCandidate.FoundInterfaceOrAbstractProperty!.Value, foundCandidate.Usings);
       }
 
       ///Filter candidate classes to actual classes to augment
-      List<(ClassCandidate, IEnumerable<string>)>? classes = new();
+      List<(ClassCandidate, HashSet<string>)>? classes = [];
+
+      HashSet<INamedTypeSymbol> allFilteredInterfaces;
+      ImmutableArray<ISymbol> currentInterfaceMembers;
+      ImmutableArray<AttributeData> attributes;
+      INamedTypeSymbol? attributeClass;
+      string? usingDirective;
+      HashSet<string>? usingDirectives;
+      List<int> indexToRemove;
+      bool isCurrentClassAdded;
 
       foreach (var classCandidate in classesCandidates)
       {
-        var allInterfaces = classCandidate.Item1.ClassType!.AllInterfaces;
+        isCurrentClassAdded = false;
 
-        bool isCurrentClassAdded = false;
+        allFilteredInterfaces = classCandidate.Item1.ClassType!.GetAllFilteredImplementedInterfaces();
 
-        foreach (var interfaceTypeSymbol in allInterfaces)
+        foreach (var interfaceTypeSymbol in allFilteredInterfaces)
         {
-          var currentInterfaceMembers = interfaceTypeSymbol.GetMembers();
+          currentInterfaceMembers = interfaceTypeSymbol.GetMembers();
           if (!currentInterfaceMembers.Any())
             continue;
 
@@ -240,28 +261,43 @@ namespace SetOnceGenerator
             if (member is not IPropertySymbol propertySymbol)
               continue;
 
-            var attributes = propertySymbol.GetAttributes();
+            attributes = propertySymbol.GetAttributes();
 
             if (!attributes.Any())
               continue;
 
             foreach (var attribute in attributes)
             {
-              var attributeClass = attribute.AttributeClass;
+              attributeClass = attribute.AttributeClass;
 
               if (SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetOnceAttributeType)
                || SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetNTimesAttributeType))
               {
-                var usingDirective = propertySymbol.GetUsingDirective();
-                var usingDirectives = usingDirective == default ?
+                usingDirective = propertySymbol.GetUsingDirective();
+                usingDirectives = usingDirective == default ?
                   default
-                  : new string[] { usingDirective };
+                  : new HashSet<string>([usingDirective]);
 
-                interfacesDefinitions.AddTuple(interfaceTypeSymbol, propertySymbol, usingDirectives);
+                interfacesOrAbstractDefinitions.AddTuple(interfaceTypeSymbol, propertySymbol, usings: usingDirectives);
 
-                if (!isCurrentClassAdded && !classes.Any(@class => @class.Item1.Equals(classCandidate)))
+                if (!isCurrentClassAdded)
                 {
+                  indexToRemove = [];
+
+                  for (int i = 0; i < classes.Count; i++)
+                  {
+                    if (classes[i].Item1.Equals(classCandidate.Item1))
+                    {
+                      classCandidate.Item2.UnionWith(classes[i].Item2);
+                      indexToRemove.Add(i);
+                    }
+                  }
+
+                  for (int i = 0; i < indexToRemove.Count; i++)
+                    classes.RemoveAt(indexToRemove[i]);
+
                   classes.Add(classCandidate);
+
                   isCurrentClassAdded = true;
                 }
               }
@@ -270,63 +306,92 @@ namespace SetOnceGenerator
         }
       }
 
-      IList<ClassToAugment> classesToAugments = new List<ClassToAugment>();
-      IEnumerable<string> currentUsingsNameSpaces;
+      IList<ClassToAugment> classesToAugments = [];
+      HashSet<string> currentUsingsNameSpaces = [];
+      InterfaceOrAbstractDefinition currentInterfaceOrAbstractDefinition;
+      HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> augmentedInterfacesOrAbstracts = [];
+      ClassToAugment currentClassToAugment;
 
       foreach (var classCandidate in classes)
       {
         if (classCandidate.Item1.ClassType == null)
           continue;
 
-        var currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType, classCandidate.Item1.Namespace);
-        currentUsingsNameSpaces = currentClassToAugment.UsingNamespaces.Union(classCandidate.Item2);
+        currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty), classCandidate.Item1.Namespace);
+        currentClassToAugment.UsingNamespaces.UnionWith(classCandidate.Item2);
 
-        HashSet<(InterfaceDefinition, IEnumerable<string>)> augmentedInterfaces = new();
+        augmentedInterfacesOrAbstracts = [];
         ///This was giving me an IndexOutOfRangeException ...
         //augmentedInterfaces = interfacesDefinitions
         //    .Where(interfaceDef => currentClassToAugment.Class.AllInterfaces//classCandidate.Item1.ClassType.AllInterfaces
         //                        .Any(interfaceType => interfaceType.IsSameInterface(interfaceDef.Item1)));
+        allFilteredInterfaces = classCandidate.Item1.ClassType.GetAllFilteredImplementedInterfaces();
 
         ///Doing it like old time so.
-        foreach (var interfaceDefinition in interfacesDefinitions)
+        foreach (var interfaceOrAbstractDefinition in interfacesOrAbstractDefinitions)
         {
-          var allInterfaces = currentClassToAugment.ClassType.AllInterfaces;
-
-          foreach (var interfaceType in allInterfaces)
+          foreach (var interfaceType in allFilteredInterfaces)
           {
-            if (interfaceType.IsSameInterface(interfaceDefinition.Item1))
+            if (interfaceType.IsSameInterfaceOrAbstract(interfaceOrAbstractDefinition.Item1))
             {
               if (interfaceType.TypeParameters.Length == 0)
               {
-                augmentedInterfaces.Add(interfaceDefinition);
+                augmentedInterfacesOrAbstracts.Add(interfaceOrAbstractDefinition);
                 continue;
               }
 
-              InterfaceDefinition currentInterfaceDefinition =
+              currentInterfaceOrAbstractDefinition =
                   new(
-                      new TypeName(interfaceDefinition.Item1.TypeName.Name,
-                                           interfaceType.TypeArguments),
-                      interfaceDefinition.Item1.NameSpace,
-                      interfaceDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceDefinition.Item1.TypeName.GenericParameters!, interfaceType.TypeArguments)
+                      interfaceType.ToTypeName(string.Empty),
+                      interfaceOrAbstractDefinition.Item1.NameSpace,
+                      interfaceOrAbstractDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceOrAbstractDefinition.Item1.TypeName.GenericParameters!, interfaceType.TypeArguments)
                      );
 
-              augmentedInterfaces.Add((currentInterfaceDefinition, interfaceDefinition.Item2));
+              augmentedInterfacesOrAbstracts.Add((currentInterfaceOrAbstractDefinition, interfaceOrAbstractDefinition.Item2));
             }
           }
         }
 
-        foreach (var augmentedInterface in augmentedInterfaces)
+        foreach (var augmentedInterfaceOrAbstract in augmentedInterfacesOrAbstracts)
         {
-          currentClassToAugment.InterfacesDefinitions.Add(augmentedInterface.Item1);
-          currentUsingsNameSpaces = currentUsingsNameSpaces.Union(augmentedInterface.Item2);
+          currentClassToAugment.InterfacesOrAbstractsDefinitions.Add(augmentedInterfaceOrAbstract.Item1);
+          currentUsingsNameSpaces.UnionWith(augmentedInterfaceOrAbstract.Item2);
         }
 
         foreach (var usingNamespace in currentUsingsNameSpaces)
-          /// Meh after all ... Should not be needed because of .Union() used for currentUsingsNameSpaces.
+          /// Meh after all ... Should not be needed because of .UnionWith() used for currentUsingsNameSpaces.
           if (!currentClassToAugment.UsingNamespaces.Contains(usingNamespace))
             currentClassToAugment.UsingNamespaces.Add(usingNamespace);
 
         classesToAugments.Add(currentClassToAugment);
+      }
+
+      foreach (var interfaceOrAbstractDefinition in interfacesOrAbstractDefinitions)
+      {
+        if (!interfaceOrAbstractDefinition.Item1.IsAbstractClass)
+          continue;
+
+        var alreadyPresentAbstractClassesToAugment = classesToAugments
+          .Where(currentClassToAugment =>
+          currentClassToAugment.TypeName.IsAbstractClass
+          && currentClassToAugment.TypeName.Equals(interfaceOrAbstractDefinition.Item1.TypeName)
+          && currentClassToAugment.TypeName.HaveSameGenericTypeParameter(interfaceOrAbstractDefinition.Item1.TypeName));
+
+        if (alreadyPresentAbstractClassesToAugment?.Any() ?? false)
+        {
+          foreach (var abstractClassToAugment in alreadyPresentAbstractClassesToAugment)
+          {
+            abstractClassToAugment.InterfacesOrAbstractsDefinitions.Add(interfaceOrAbstractDefinition.Item1);
+            abstractClassToAugment.UsingNamespaces.UnionWith(interfaceOrAbstractDefinition.Item2);
+          }
+          continue;
+        }
+
+        classesToAugments.Add(
+          new ClassToAugment(interfaceOrAbstractDefinition.Item1.TypeName,
+          interfaceOrAbstractDefinition.Item1.NameSpace,
+          interfaceOrAbstractDefinition.Item2,
+          [interfaceOrAbstractDefinition.Item1]));
       }
 
       return classesToAugments;
@@ -359,12 +424,12 @@ namespace SetOnceGenerator
 
         string usingStatements = FormatUsingStatements(classToAugment.UsingNamespaces);
 
-        string classSignature = classToAugment.ClassType.FormatClassSignature();
+        string classSignature = classToAugment.TypeName.FormatClassSignature();
 
         string settableProperties = "";
-        foreach (var interfaceDefinition in classToAugment.InterfacesDefinitions)
-          foreach (var property in interfaceDefinition.Properties)
-            settableProperties += FormatSettableProperty(property, interfaceDefinition);
+        foreach (var interfaceOrAbstractDefinition in classToAugment.InterfacesOrAbstractsDefinitions)
+          foreach (var property in interfaceOrAbstractDefinition.Properties)
+            settableProperties += FormatSettableProperty(property, interfaceOrAbstractDefinition);
 
         string augmentedClass = $@"// <auto-generated/>
 #nullable enable
@@ -380,7 +445,7 @@ namespace SetOnceGenerator
 }}
 ";
 
-        context.AddSource($"{hintNamePrefix}.{classToAugment.ClassType.Name}.g.cs", augmentedClass);
+        context.AddSource($"{hintNamePrefix}.{classToAugment.TypeName.Name}.g.cs", augmentedClass);
       }
     }
   }
