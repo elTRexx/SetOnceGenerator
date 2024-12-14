@@ -76,17 +76,13 @@ using CrossProjectTesting.Sources.Interfaces;
 
 Console.WriteLine("Testing cross project settable once properties.");
 
+Console.WriteLine($"Testing {nameof(IBoolDTO)}.{nameof(IBoolDTO.MyBool)}.");
+
 bool boolValue = true;
 
 IBoolDTO myBool = new BoolDTO(boolValue);
 
-Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
-
-boolValue = !boolValue;
-
-Console.WriteLine($"#1 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
-
-myBool.MyBool = boolValue;
+Console.WriteLine($"#1 Construct {nameof(BoolDTO)} and setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
 
 Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
 
@@ -105,4 +101,40 @@ Console.WriteLine($"#3 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {bool
 myBool.MyBool = boolValue;
 
 Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+
+boolValue = !boolValue;
+
+Console.WriteLine($"#4 Setting {nameof(myBool)}.{nameof(myBool.MyBool)} to {boolValue}");
+
+myBool.MyBool = boolValue;
+
+Console.WriteLine($"{nameof(myBool)}.{nameof(myBool.MyBool)} = {myBool.MyBool}");
+
+Console.WriteLine($"{Environment.NewLine}-------------------------------------------{Environment.NewLine}");
+
+Console.WriteLine($"Testing {nameof(ABoolDTO)}.{nameof(ABoolDTO.MyInt)}.");
+
+var myABool = myBool as ABoolDTO;
+if (myABool == null)
+{
+  Console.WriteLine($"ERROR : casted {nameof(myBool)} into {typeof(ABoolDTO).Name} failed!");
+  return;
+}
+
+int intValue = 0;
+
+Console.WriteLine($"#1 Setting {nameof(myABool)}.{nameof(myABool.MyInt)} to {intValue}");
+
+myABool.MyInt = intValue;
+
+Console.WriteLine($"{nameof(myABool)}.{nameof(myABool.MyInt)} = {myABool.MyInt}");
+
+intValue++;
+
+Console.WriteLine($"#2 Setting {nameof(myABool)}.{nameof(myABool.MyInt)} to {intValue}");
+
+myABool.MyInt = intValue;
+
+Console.WriteLine($"{nameof(myABool)}.{nameof(myABool.MyInt)} = {myABool.MyInt}");
+
 

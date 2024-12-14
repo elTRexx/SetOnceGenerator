@@ -81,6 +81,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
 using static SetOnceGenerator.Pipeline;
 
 namespace SetOnceGenerator
@@ -142,7 +143,10 @@ namespace SetOnceGenerator
       var transformedParamerters = propertyDefinition.TypeName.GenericParameters!.Select(_TransformType);
 
       return new PropertyDefinition(propertyDefinition.Name,
-                                    new TypeName(propertyDefinition.TypeName.Name,
+                                    new TypeName(propertyDefinition.TypeName.IsAbstractClass,
+                                                  propertyDefinition.TypeName.Name,
+                                                  propertyDefinition.TypeName.DeclaredAccessibility,
+                                                  propertyDefinition.TypeName.Modifiers,
                                                   transformedParamerters),
                                     propertyDefinition.AttributeArgument
                                     );
@@ -168,120 +172,217 @@ namespace SetOnceGenerator
 
     /// <summary>
     /// Utilitary method to check if an interface symbol as a <see cref="INamedTypeSymbol"/>
-    /// define the same interface as a <see cref="InterfaceDefinition"/>
+    /// define the same interface as a <see cref="InterfaceOrAbstractDefinition"/>
     /// </summary>
-    /// <param name="interfaceType">The interface symbol to check upon</param>
-    /// <param name="interfaceDefinition">the interface definition to check against</param>
-    /// <returns>True if <paramref name="interfaceType"/> define the same interface as <paramref name="interfaceDefinition"/>,
+    /// <param name="interfaceOrAbstractType">The interface symbol to check upon</param>
+    /// <param name="interfaceOrAbstractDefinition">the interface definition to check against</param>
+    /// <returns>True if <paramref name="interfaceOrAbstractType"/> define the same interface as <paramref name="interfaceOrAbstractDefinition"/>,
     /// false else</returns>
-    public static bool IsSameInterface(this INamedTypeSymbol interfaceType, InterfaceDefinition interfaceDefinition)
-        => interfaceType.Name == interfaceDefinition.TypeName.Name
-        && interfaceType.TypeParameters.Length == (interfaceDefinition.TypeName.GenericParameters?.Count() ?? 0);
+    public static bool IsSameInterfaceOrAbstract(this INamedTypeSymbol interfaceOrAbstractType, InterfaceOrAbstractDefinition interfaceOrAbstractDefinition)
+        => interfaceOrAbstractType.Name == interfaceOrAbstractDefinition.TypeName.Name
+        && interfaceOrAbstractType.TypeParameters.Length == (interfaceOrAbstractDefinition.TypeName.GenericParameters?.Count() ?? 0)
+        && ((interfaceOrAbstractType.IsAbstractClass() && interfaceOrAbstractDefinition.IsAbstractClass)
+        || (interfaceOrAbstractType.IsInterfaceType() && !interfaceOrAbstractDefinition.IsAbstractClass));
+
+    public static HashSet<INamedTypeSymbol> GetAllFilteredImplementedInterfaces(this INamedTypeSymbol classType)
+    {
+      if (classType == default)
+        return default;
+
+      var allInterfaces = classType.AllInterfaces;
+      HashSet<INamedTypeSymbol> allAbstractBaseClasses = [];
+      IEnumerable<INamedTypeSymbol> filteredAllInterfaces;
+
+      var currentBaseType = classType.BaseType;
+
+      while (currentBaseType != default)
+      {
+        if (currentBaseType.IsAbstractClass())
+          allAbstractBaseClasses.Add(currentBaseType);
+        currentBaseType = currentBaseType.BaseType;
+      }
+
+      filteredAllInterfaces = allAbstractBaseClasses.Count == 0 ?
+        allInterfaces
+      :
+        allInterfaces.Where(interfaceType
+          => !allAbstractBaseClasses.Any(abstractType
+            => abstractType.AllInterfaces.Contains(interfaceType)));
+
+      return new HashSet<INamedTypeSymbol>(filteredAllInterfaces, SymbolEqualityComparer.Default); ;
+    }
+
+    public static HashSet<INamedTypeSymbol> GetAllImplementedInterfacesAndExtendedAbstractClasses(this INamedTypeSymbol classType)
+    {
+      if (classType == default)
+        return default;
+
+      var allInterfaces = classType.AllInterfaces;
+      HashSet<INamedTypeSymbol> allAbstractBaseClasses = [];
+
+      var currentBaseType = classType.BaseType;
+
+      while (currentBaseType != default)
+      {
+        if (currentBaseType.IsAbstractClass())
+          allAbstractBaseClasses.Add(currentBaseType);
+        currentBaseType = currentBaseType.BaseType;
+      }
+
+      if (allAbstractBaseClasses.Count == 0)
+        return new HashSet<INamedTypeSymbol>(allInterfaces, SymbolEqualityComparer.Default);
+
+      var filteredAllInterfaces = allInterfaces.Where(interfaceType
+        => !allAbstractBaseClasses.Any(abstractType
+          => abstractType.AllInterfaces.Contains(interfaceType)));
+
+      allAbstractBaseClasses.UnionWith(filteredAllInterfaces);
+
+      return allAbstractBaseClasses;
+    }
 
     /// <summary>
     /// Try to add an <see cref="(INamedTypeSymbol, PropertyDefinition)"/> tuple
     /// and its corresponding <see cref="IEnumerable{string}"/> using statements declarations
-    /// to a collection of <see cref="HashSet{(InterfaceDefinition, IEnumerable{string})}"/>
+    /// to a collection of <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string})}"/>
     /// </summary>
-    /// <param name="interfacesDefinitions">The collection in witch trying to add <paramref name="interfacePropertyDef"/> and <paramref name="usings"/></param>
-    /// <param name="interfacePropertyDef">The tuple of the interface type symbol and its property definition trying to be transformed as a <see cref="InterfaceDefinition"/> and then added along side <paramref name="usings"/> in <paramref name="interfacesDefinitions"/></param>
-    /// <param name="usings">the collection of using statements trying to be added along side <paramref name="interfacePropertyDef"/> in <paramref name="interfacesDefinitions"/></param>
-    /// <returns><paramref name="interfacesDefinitions"/> augmented with a new <see cref="(InterfaceDefinition, IEnumerable{string})"/> 
+    /// <param name="interfacesOrAbstractDefinitions">The collection in witch trying to add <paramref name="interfaceOrAbstractPropertyDef"/> and <paramref name="usings"/></param>
+    /// <param name="interfaceOrAbstractPropertyDef">The tuple of the interface type symbol and its property definition trying to be transformed as a <see cref="InterfaceOrAbstractDefinition"/> and then added along side <paramref name="usings"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
+    /// <param name="usings">the collection of using statements trying to be added along side <paramref name="interfaceOrAbstractPropertyDef"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
+    /// <returns><paramref name="interfacesOrAbstractDefinitions"/> augmented with a new <see cref="(InterfaceOrAbstractDefinition, IEnumerable{string})"/> 
     /// if suceed or unchanged else</returns>
-    public static HashSet<(InterfaceDefinition, IEnumerable<string>)> AddTuple
-      (this HashSet<(InterfaceDefinition, IEnumerable<string>)> interfacesDefinitions,
-      (INamedTypeSymbol, PropertyDefinition) interfacePropertyDef,
-      IEnumerable<string> usings)
+    public static HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> AddTuple
+      (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
+      (INamedTypeSymbol, PropertyDefinition) interfaceOrAbstractPropertyDef,
+      HashSet<string> usings)
     {
-      if (interfacePropertyDef.Item1 == null)
-        return interfacesDefinitions;
-      if (interfacePropertyDef.Item2.IsNull)
-        return interfacesDefinitions;
+      if (interfaceOrAbstractPropertyDef.Item1 == null)
+        return interfacesOrAbstractDefinitions;
+      if (interfaceOrAbstractPropertyDef.Item2.IsNull)
+        return interfacesOrAbstractDefinitions;
 
-      string interfaceName = interfacePropertyDef.Item1.GetGenericTypeName(out var typeArguments);
+      bool isAbstractClass = interfaceOrAbstractPropertyDef.Item1.IsAbstractClass();
 
-      IEnumerable<ITypeSymbol>? typeParameters = interfacePropertyDef.Item1.TypeParameters;
+      string interfaceOrAbstractName = interfaceOrAbstractPropertyDef.Item1.GetGenericTypeName(out var typeArguments);
 
-      string interfaceFullName = interfaceName.FormatGenericTypeName(typeArguments);
+      string interfaceOrAbstractDeclaredAccessibility = SyntaxFacts.GetText(interfaceOrAbstractPropertyDef.Item1.DeclaredAccessibility);
 
-      string interfaceNamespace = interfacePropertyDef.Item1.ContainingNamespace.ToDisplayString();
+      IEnumerable<ITypeSymbol>? typeParameters = interfaceOrAbstractPropertyDef.Item1.TypeParameters;
 
-      return interfacesDefinitions.AddTuple(interfaceName, interfaceFullName, interfaceNamespace, typeParameters, interfacePropertyDef.Item2, usings);
+      string interfaceOrAbstractFullName = interfaceOrAbstractName.FormatGenericTypeName(typeArguments);
+
+      string interfaceOrAbstractNamespace = interfaceOrAbstractPropertyDef.Item1.ContainingNamespace.ToDisplayString();
+
+      return interfacesOrAbstractDefinitions.AddTuple(isAbstractClass, interfaceOrAbstractName, interfaceOrAbstractDeclaredAccessibility, interfaceOrAbstractFullName, interfaceOrAbstractNamespace, typeParameters, interfaceOrAbstractPropertyDef.Item2, usings);
     }
 
-    public static HashSet<(InterfaceDefinition, IEnumerable<string>)> AddTuple
-      (this HashSet<(InterfaceDefinition, IEnumerable<string>)> interfacesDefinitions,
-      INamedTypeSymbol interfaceTypeSymbol,
+    public static HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> AddTuple
+      (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
+      INamedTypeSymbol interfaceOrAbstractTypeSymbol,
       IPropertySymbol propertySymbol,
-      IEnumerable<string>? usings = null
+      string modifiers = "",
+      HashSet<string>? usings = null
       )
     {
-      var propertyDefinition = propertySymbol.GetPropertyDefinition();
+      if (interfaceOrAbstractTypeSymbol.IsInterfaceType())
+        modifiers = string.Empty;
 
-      if (interfaceTypeSymbol == null
+      if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(modifiers))
+        modifiers = propertySymbol.GetModifiersAsString();
+
+      var propertyDefinition = propertySymbol.GetPropertyDefinition(modifiers);
+
+      if (interfaceOrAbstractTypeSymbol == null
         || !propertyDefinition.HasValue)
-        return interfacesDefinitions;
+        return interfacesOrAbstractDefinitions;
 
-      string interfaceName = interfaceTypeSymbol.GetGenericTypeName(out var typeParameters);
+      bool isAbstractClass = interfaceOrAbstractTypeSymbol.IsAbstractClass();
 
-      string interfaceFullName = ToStringUtilities.FormatGenericTypeName(interfaceName, typeParameters);
+      string interfaceOrAbstractName = interfaceOrAbstractTypeSymbol.GetGenericTypeName(out var typeParameters);
 
-      string interfaceNamespace = interfaceTypeSymbol.ContainingNamespace.ToDisplayString();
+      string interfaceOrAbstractDeclaredAccessibility = SyntaxFacts.GetText(interfaceOrAbstractTypeSymbol.DeclaredAccessibility);
 
-      string usingNamespaces = string.IsNullOrWhiteSpace(interfaceNamespace) ? "" : $"using {interfaceNamespace};";
+      string interfaceOrAbstractFullName = ToStringUtilities.FormatGenericTypeName(interfaceOrAbstractName, typeParameters);
 
-      usings ??= new string[0];
+      string interfaceOrAbstractNamespace = interfaceOrAbstractTypeSymbol.ContainingNamespace.ToDisplayString();
+
+      string usingNamespaces = string.IsNullOrWhiteSpace(interfaceOrAbstractNamespace) ? "" : $"using {interfaceOrAbstractNamespace};";
+
+      usings ??= [];
 
       if (!usings.Contains(usingNamespaces))
-        usings = usings.Concat(new string[] { usingNamespaces });
+        usings.UnionWith([usingNamespaces]);
 
-      return interfacesDefinitions.AddTuple(
-        interfaceName,
-        interfaceFullName,
-        interfaceNamespace,
+      return interfacesOrAbstractDefinitions.AddTuple(
+        isAbstractClass,
+        interfaceOrAbstractName,
+        interfaceOrAbstractDeclaredAccessibility,
+        interfaceOrAbstractFullName,
+        interfaceOrAbstractNamespace,
         typeParameters,
         propertyDefinition.Value,
         usings);
     }
 
-    public static HashSet<(InterfaceDefinition, IEnumerable<string>)> AddTuple
-      (this HashSet<(InterfaceDefinition, IEnumerable<string>)> interfacesDefinitions,
-      string interfaceName,
-      string interfaceFullName,
-      string interfaceNamespace,
+    public static HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> AddTuple
+      (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
+      bool isAbstractClass,
+      string interfaceOrAbstractName,
+      string interfaceOrAbstractDeclaredAccessibility,
+      string interfaceOrAbstractFullName,
+      string interfaceOrAbstractNamespace,
       IEnumerable<ITypeSymbol>? typeParameters,
       PropertyDefinition propertyDefinition,
-      IEnumerable<string> usings)
+      HashSet<string> usings)
     {
-      if (string.IsNullOrWhiteSpace(interfaceName)
-        ||string.IsNullOrWhiteSpace(interfaceFullName)
-        ||string.IsNullOrWhiteSpace(interfaceFullName))
-        return interfacesDefinitions;
+      if (string.IsNullOrWhiteSpace(interfaceOrAbstractName)
+        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName)
+        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName))
+        return interfacesOrAbstractDefinitions;
 
-      var foundInterfaces = interfacesDefinitions.Where(interfaceDef => interfaceDef.Item1.FullName == interfaceFullName);
+      var foundInterfacesOrAbstract = interfacesOrAbstractDefinitions.Where(interfaceDef => interfaceDef.Item1.FullName == interfaceOrAbstractFullName);
 
-      if (foundInterfaces == default || foundInterfaces.Count() > 1)
-        return interfacesDefinitions;
+      if (foundInterfacesOrAbstract == default || foundInterfacesOrAbstract.Count() > 1)
+        return interfacesOrAbstractDefinitions;
 
-      var foundInterface = foundInterfaces.SingleOrDefault();
+      var foundInterfaceOrAbstract = foundInterfacesOrAbstract.SingleOrDefault();
 
-      if (foundInterface.Equals(default))
+      if (foundInterfaceOrAbstract.Equals(default))
       {
-        var interfaceDef = new InterfaceDefinition(
-            new TypeName(interfaceName, typeParameters),
-            interfaceNamespace);
+        var interfaceOrAbstractDef = new InterfaceOrAbstractDefinition(
+            new TypeName(isAbstractClass, interfaceOrAbstractName, interfaceOrAbstractDeclaredAccessibility, string.Empty, typeParameters),
+            interfaceOrAbstractNamespace);
 
-        interfaceDef.Properties.Add(propertyDefinition);
-        interfacesDefinitions.Add((interfaceDef, usings));
+        interfaceOrAbstractDef.Properties.Add(propertyDefinition);
+        interfacesOrAbstractDefinitions.Add((interfaceOrAbstractDef, usings));
       }
-      else if (!foundInterface.Item1.Properties.Any(property => property.Equals(propertyDefinition)))
+      else if (!foundInterfaceOrAbstract.Item1.Properties.Any(property => property.Equals(propertyDefinition)))
       {
-        foundInterface.Item1.Properties.Add(propertyDefinition);
-        foundInterface.Item2 = foundInterface.Item2.Union(usings);
+        foundInterfaceOrAbstract.Item1.Properties.Add(propertyDefinition);
+        foundInterfaceOrAbstract.Item2.UnionWith(usings);
       }
 
-      return interfacesDefinitions;
+      return interfacesOrAbstractDefinitions;
     }
+
+    public static string GetModifiersAsString(this IPropertySymbol propertySymbol)
+    {
+      string modifiersAsString = string.Empty;
+
+      foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
+      {
+        modifiersAsString = (syntaxReference.GetSyntax() as MemberDeclarationSyntax)
+          ?.GetModifiersAsString() ?? modifiersAsString;
+
+        if (!string.IsNullOrWhiteSpace(modifiersAsString))
+          return modifiersAsString;
+      }
+
+      return modifiersAsString;
+    }
+
+    public static string GetModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
+      => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
 
     /// <summary>
     /// Given a <see cref="IPropertySymbol"/> <paramref name="propertySymbol"/>,
@@ -289,7 +390,7 @@ namespace SetOnceGenerator
     /// </summary>
     /// <param name="propertySymbol">The compilation symbol of a property to be returned structure as a <see cref="PropertyDefinition"/></param>
     /// <returns>A structured <see cref="PropertyDefinition"/> data corresponding given <paramref name="propertySymbol"/> parameter.</returns>
-    public static PropertyDefinition? GetPropertyDefinition(this IPropertySymbol propertySymbol)
+    public static PropertyDefinition? GetPropertyDefinition(this IPropertySymbol propertySymbol, string modifiers)
     {
       var attributes = propertySymbol?.GetAttributes();
 
@@ -327,8 +428,11 @@ namespace SetOnceGenerator
 
       return new PropertyDefinition(
                 propertySymbol.Name,
-                new TypeName(propertyTypeName,
-                typeParamerters),
+                //new TypeName(propertySymbol.IsAbstract,
+                //  propertyTypeName,
+                //  SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility),
+                //  typeParamerters),
+                propertySymbol.Type.ToTypeName(modifiers),
                 new AttributeDefinition(
                     maxSet
                     )
@@ -339,6 +443,70 @@ namespace SetOnceGenerator
     {
       var typeNamespace = propertySymbol.Type.ContainingNamespace;
       return string.IsNullOrWhiteSpace(typeNamespace?.Name) ? "" : $"using {typeNamespace?.ToDisplayString()};";
+    }
+
+    public static bool EqualsTo(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
+    //=> namedTypeSymbol.ToTypeName().Equals(typeName);
+    {
+      if (namedTypeSymbol == default
+        || default(TypeName).Equals(typeName))
+        return false;
+
+      return namedTypeSymbol.Name == typeName.Name
+        && namedTypeSymbol.HaveSameGenericTypeParameter(typeName);
+    }
+
+    public static bool HaveSameGenericTypeParameter(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
+    {
+      if ((namedTypeSymbol?.TypeArguments.Length ?? -1) != (typeName.GenericParameters?.Count() ?? -2))
+        return false;
+
+      for (int i = 0; i < namedTypeSymbol!.TypeArguments.Length; i++)
+      {
+        if (!namedTypeSymbol.TypeArguments[i].Equals(typeName.GenericParameters.ElementAtOrDefault(i), SymbolEqualityComparer.Default))
+          return false;
+      }
+
+      return true;
+    }
+
+    public static bool HaveSameGenericTypeParameter(this TypeName typeName1, TypeName typeName2)
+    {
+      if ((typeName1.GenericParameters?.Count() ?? 0) != (typeName2.GenericParameters?.Count() ?? 0))
+        return false;
+
+      for (int i = 0; i < typeName1!.GenericParameters?.Count(); i++)
+      {
+        if (!typeName1.GenericParameters.ElementAtOrDefault(i)?.Equals(typeName2.GenericParameters.ElementAtOrDefault(i), SymbolEqualityComparer.Default) ?? true)
+          return false;
+      }
+
+      return true;
+    }
+
+    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string modifiers)
+    {
+      if (typeSymbol == default)
+        return default;
+
+      IEnumerable<ITypeSymbol>? typeParamerters = null;
+
+      var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+
+      var name = (typeSymbol as INamedTypeSymbol)?
+        .GetGenericTypeName(out typeParamerters)
+        ?? typeSymbol.GetTypeAliasOrShortName();
+
+      //var genericParameters = namedTypeSymbol.TypeParameters
+      //  .Where(typeParameter => typeParameter is ITypeSymbol)
+      //  .Select(typeParameter => typeParameter as ITypeSymbol);
+
+      return new TypeName(
+        typeSymbol.IsAbstractClass(),
+        name,
+        SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility),
+        modifiers,
+        typeParamerters);
     }
 
     /// <summary>
@@ -365,8 +533,13 @@ namespace SetOnceGenerator
     public static bool HasKind(this ClassDeclarationSyntax cds, SyntaxKind kind)
         => cds.Modifiers.Any(m => m.IsKind(kind));
 
+    public static bool IsAbstractClass(this ITypeSymbol typeSymbol)
+      => typeSymbol?.TypeKind == TypeKind.Class && typeSymbol.IsAbstract;
+    public static bool IsInterfaceType(this ITypeSymbol typeSymbol)
+      => typeSymbol?.TypeKind == TypeKind.Interface;
+
     /// <summary>
-    /// Check if a <see cref="HashSet{(InterfaceDefinition, IEnumerable{string}}"/> 
+    /// Check if a <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string}}"/> 
     /// contains a given <see cref="INamedTypeSymbol"/> interface symbol
     /// </summary>
     /// <param name="interfacesDefinitions">a collection of interfaces (and their using statements, ignored here)

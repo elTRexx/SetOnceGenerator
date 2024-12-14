@@ -81,4 +81,10 @@ namespace CrossProjectTesting.Sources.Interfaces
     [SetNTimes(3)]
     bool MyBool { get; set; }
   }
+
+  public abstract partial class ABoolDTO : IBoolDTO
+  {
+    [SetOnce]
+    public partial int MyInt { get; set; }
+  }
 }

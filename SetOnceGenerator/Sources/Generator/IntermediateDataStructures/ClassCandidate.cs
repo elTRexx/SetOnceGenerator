@@ -104,7 +104,7 @@ namespace SetOnceGenerator
     {
       Namespace = @namespace;
       ClassType = classType;
-      Usings = new HashSet<string>();
+      Usings = [];
     }
   }
 }

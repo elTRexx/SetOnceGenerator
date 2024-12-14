@@ -75,7 +75,7 @@ using CrossProjectTesting.Sources.Interfaces;
 
 namespace CrossProjectTesting.Sources
 {
-  internal partial class BoolDTO : IBoolDTO
+  internal partial class BoolDTO : ABoolDTO//IBoolDTO
   {
     public BoolDTO(bool myBool)
     {

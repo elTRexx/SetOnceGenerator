@@ -81,6 +81,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
 
 namespace SetOnceGenerator
 {
@@ -138,25 +139,51 @@ namespace SetOnceGenerator
     /// <returns>The <paramref name="classType"/> as a partial class 
     /// with its declared accessibility and its formated type name</returns>
     public static string FormatClassSignature(this INamedTypeSymbol classType)
-        => SyntaxFacts.GetText(classType.DeclaredAccessibility)
+      => SyntaxFacts.GetText(classType.DeclaredAccessibility)
+          .FormatClassSignature(classType.Name, classType.FormatGenericTypeSignature());
+
+    public static string FormatClassSignature(this TypeName typeName)
+      => typeName.DeclaredAccessibility.FormatClassSignature(typeName.Name, typeName.FormatGenericTypeSignature());
+
+    public static string FormatClassSignature(this string accessibility, string className, string genericTypeSignature)
+      => accessibility
         + " partial class "
         /// With partial class, no need to repeat baseType and Interfaces declaration
-        + classType.Name
-        + classType.FormatGenericTypeSignature()
+        + className
+        + genericTypeSignature
         ;
 
     public static string FormatGenericTypeSignature(this INamedTypeSymbol classType)
     {
-      if (classType == null || classType.TypeParameters.Length == 0)
-        return "";
+      if (classType == null)
+        return string.Empty;
+
+      return classType.TypeParameters.FormatGenericTypeSignature();
+    }
+
+    public static string FormatGenericTypeSignature(this TypeName typeName)
+    {
+      if (default(TypeName).Equals(typeName))
+        return string.Empty;
+
+      return typeName.GenericParameters?.FormatGenericTypeSignature() ?? string.Empty;
+    }
+
+    public static string FormatGenericTypeSignature(this IEnumerable<ITypeParameterSymbol> typeParameters)
+      => typeParameters.Select(type => type as ITypeSymbol).FormatGenericTypeSignature();
+
+    public static string FormatGenericTypeSignature(this IEnumerable<ITypeSymbol> typeParameters)
+    {
+      if (typeParameters == default || typeParameters.Count() <= 0)
+        return string.Empty;
 
       string genericTypeSignature = "<";
 
-      for (int i = 0; i < classType.TypeParameters.Length-1; i++)
+      for (int i = 0; i < typeParameters.Count()-1; i++)
       {
-        genericTypeSignature += classType.TypeParameters[i].FormatGenericTypeAliasOrShortName()+", ";
+        genericTypeSignature += typeParameters.ElementAt(i).FormatGenericTypeAliasOrShortName()+", ";
       }
-      genericTypeSignature += classType.TypeParameters.Last().FormatGenericTypeAliasOrShortName()+">";
+      genericTypeSignature += typeParameters.Last().FormatGenericTypeAliasOrShortName()+">";
 
       return genericTypeSignature;
     }

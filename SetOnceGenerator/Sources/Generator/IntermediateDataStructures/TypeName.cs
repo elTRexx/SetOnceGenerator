@@ -93,7 +93,13 @@ namespace SetOnceGenerator
   /// </summary>
   public readonly struct TypeName : IEquatable<TypeName>
   {
+    public bool IsAbstractClass { get; init; }
+
     public string Name { get; init; }
+
+    public string DeclaredAccessibility { get; init; }
+
+    public string Modifiers { get; init; }
 
     public IEnumerable<ITypeSymbol>? GenericParameters { get; init; }
 
@@ -101,11 +107,14 @@ namespace SetOnceGenerator
     public string FullName => _fullName;
 
     public bool Equals(TypeName other)
-     => FullName == other.FullName;
+     => FullName == other.FullName && IsAbstractClass == other.IsAbstractClass;
 
-    public TypeName(string name, IEnumerable<ITypeSymbol>? genericParameters)
+    public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string modifiers, IEnumerable<ITypeSymbol>? genericParameters)
     {
+      IsAbstractClass = isAbstractClass;
       Name = name;
+      DeclaredAccessibility = declaredAccessibility;
+      Modifiers = modifiers;
       GenericParameters = genericParameters;
       _fullName = name.FormatGenericTypeName(genericParameters);
     }
