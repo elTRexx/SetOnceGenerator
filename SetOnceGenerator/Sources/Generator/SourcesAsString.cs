@@ -115,7 +115,7 @@ namespace SetOnceGenerator
     /// used to implement the property as an explicit interface implementation to prevent eventual name clashing of properties</param>
     /// <returns>The <paramref name="propertyDefinition"/> formated as a property
     /// backed up by a SettableNTimesProperty<> private field to ensure its constrained settability</returns>
-    public static string FormatSettableProperty(PropertyDefinition propertyDefinition, InterfaceDefinition interfaceDefinition)
+    public static string FormatSettableProperty(PropertyDefinition propertyDefinition, InterfaceOrAbstractDefinition interfaceDefinition)
     {
       string hiddenFieldName = $"_setNTimes_{interfaceDefinition.FullName.Replace('<', '_').Replace(", ", "_").Replace(">", "")}_{propertyDefinition.Name}";
 

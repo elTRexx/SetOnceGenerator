@@ -75,7 +75,7 @@
 
 // Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
 // lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
-#endregion 
+#endregion
 #endregion
 
 using Microsoft.CodeAnalysis;
@@ -98,16 +98,16 @@ namespace SetOnceGenerator
   public readonly struct FoundCandidate
   {
     public ClassCandidate? FoundClass { get; init; }
-    public (INamedTypeSymbol, PropertyDefinition)? FoundInterfaceProperty { get; init; }
-    public IEnumerable<string> Usings { get; init; }
+    public (INamedTypeSymbol, PropertyDefinition)? FoundInterfaceOrAbstractProperty { get; init; }
+    public HashSet<string> Usings { get; init; }
 
     public bool IsFoundClassCandidate => FoundClass != null;
-    public bool IsFoundProperty => FoundInterfaceProperty != null;
+    public bool IsFoundProperty => FoundInterfaceOrAbstractProperty != null;
 
-    public FoundCandidate(ClassCandidate? classCandidate, (INamedTypeSymbol, PropertyDefinition)? interfaceProperty, IEnumerable<string> usings)
+    public FoundCandidate(ClassCandidate? classCandidate, (INamedTypeSymbol, PropertyDefinition)? interfaceOrAbstractProperty, HashSet<string> usings)
     {
       FoundClass = classCandidate;
-      FoundInterfaceProperty = interfaceProperty;
+      FoundInterfaceOrAbstractProperty = interfaceOrAbstractProperty;
       Usings = usings;
     }
   }

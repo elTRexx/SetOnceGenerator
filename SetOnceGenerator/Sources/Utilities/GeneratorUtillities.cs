@@ -398,6 +398,7 @@ namespace SetOnceGenerator
         return default;
 
       int maxSet = 0;
+      //AttributeData foundAttribute;
       foreach (var attribute in attributes!)
       {
         var attributeClass = attribute.AttributeClass;
@@ -405,11 +406,13 @@ namespace SetOnceGenerator
         if (SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetOnceAttributeType))
         {
           maxSet = 1;
+          //foundAttribute = attribute;
           break;
         }
         if (SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetNTimesAttributeType))
         {
           maxSet = attribute.GetAttributeArgument(0, 1);
+          //foundAttribute = attribute;
           break;
         }
       }
@@ -425,6 +428,10 @@ namespace SetOnceGenerator
 
       return new PropertyDefinition(
                 propertySymbol.Name,
+                //new TypeName(propertySymbol.IsAbstract,
+                //  propertyTypeName,
+                //  SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility),
+                //  typeParamerters),
                 propertySymbol.Type.ToTypeName(modifiers),
                 new AttributeDefinition(
                     maxSet
@@ -502,18 +509,6 @@ namespace SetOnceGenerator
         typeParamerters);
     }
 
-      //var genericParameters = namedTypeSymbol.TypeParameters
-      //  .Where(typeParameter => typeParameter is ITypeSymbol)
-      //  .Select(typeParameter => typeParameter as ITypeSymbol);
-
-      return new TypeName(
-        typeSymbol.IsAbstractClass(),
-        name,
-        SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility),
-        modifiers,
-        typeParamerters);
-    }
-
     /// <summary>
     /// Find the index of any <see cref="{T}"/> item in a <see cref="IEnumerable{T}"/>
     /// </summary>
@@ -525,14 +520,13 @@ namespace SetOnceGenerator
         => enumerable
             .Select((item, index) => new { Item = item, Index = index })
             .FirstOrDefault(_ => _.Item?.Equals(itemToFind) ?? false)?.Index ?? -1;
-    public static bool IsAbstractClass(this ITypeSymbol typeSymbol)
-      => typeSymbol?.TypeKind == TypeKind.Class && typeSymbol.IsAbstract;
-    public static bool IsInterfaceType(this ITypeSymbol typeSymbol)
-      => typeSymbol?.TypeKind == TypeKind.Interface;
 
-    #region deprecated
+    /// <summary>
+    /// Syntax sugar to test if a <see cref="ClassDeclarationSyntax"/> 
+    /// has a given <see cref="SyntaxKind"/> modifier
+    /// </summary>
     /// <param name="cds">The class syntax to check upon its <see cref="ClassDeclarationSyntax.Modifiers"/></param>
-    /// Check if a <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string}}"/> 
+    /// <param name="kind">The modifier to check upon <paramref name="cds"/></param>
     /// <returns>True if <paramref name="cds"/> have a <paramref name="kind"/> modifier
     /// in its <see cref="ClassDeclarationSyntax.Modifiers"/> collection</returns>
     public static bool HasKind(this ClassDeclarationSyntax cds, SyntaxKind kind)
@@ -543,8 +537,9 @@ namespace SetOnceGenerator
     public static bool IsInterfaceType(this ITypeSymbol typeSymbol)
       => typeSymbol?.TypeKind == TypeKind.Interface;
 
+    #region deprecated
     /// <summary>
-    /// Check if a <see cref="HashSet{(InterfaceDefinition, IEnumerable{string}}"/> 
+    /// Check if a <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string}}"/> 
     /// contains a given <see cref="INamedTypeSymbol"/> interface symbol
     /// </summary>
     /// <param name="interfacesDefinitions">a collection of interfaces (and their using statements, ignored here)

@@ -91,16 +91,18 @@ namespace SetOnceGenerator
   /// and a collection it's properties marked with [SetOnce] / [SetNTimes(n)] attribute
   /// as a <see cref="HashSet{PropertyDefinition}"/>
   /// </summary>
-  public readonly struct InterfaceDefinition : IEquatable<InterfaceDefinition>
+  public readonly struct InterfaceOrAbstractDefinition : IEquatable<InterfaceOrAbstractDefinition>
   {
     public TypeName TypeName { get; init; }
+
+    public bool IsAbstractClass => TypeName.IsAbstractClass;
 
     public string FullName => TypeName.FullName;
     public string NameSpace { get; init; }
 
     public HashSet<PropertyDefinition> Properties { get; init; }
 
-    public InterfaceDefinition(TypeName typeName, string @namespace, IEnumerable<PropertyDefinition>? propertiesDefinitions = null)
+    public InterfaceOrAbstractDefinition(TypeName typeName, string @namespace, IEnumerable<PropertyDefinition>? propertiesDefinitions = null)
     {
       TypeName = typeName;
       NameSpace = @namespace;
@@ -109,12 +111,12 @@ namespace SetOnceGenerator
           : new HashSet<PropertyDefinition>(propertiesDefinitions);
     }
 
-    public bool Equals(InterfaceDefinition other)
+    public bool Equals(InterfaceOrAbstractDefinition other)
      => TypeName.Equals(other.TypeName)
       && NameSpace == other.NameSpace
       && _PropsEquality(other);
 
-    private bool _PropsEquality(InterfaceDefinition other)
+    private bool _PropsEquality(InterfaceOrAbstractDefinition other)
     {
       if (ReferenceEquals(this, other)
        || ReferenceEquals(Properties, other.Properties))

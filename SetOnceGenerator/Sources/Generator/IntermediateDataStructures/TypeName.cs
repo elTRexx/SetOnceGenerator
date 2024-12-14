@@ -75,7 +75,7 @@
 
 // Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
 // lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
-#endregion 
+#endregion
 #endregion
 
 using Microsoft.CodeAnalysis;
@@ -88,14 +88,18 @@ using Microsoft.CodeAnalysis;
 namespace SetOnceGenerator
 {
   /// <summary>
-  /// Simple struct to store a Type's name as a <see cref="string"/>,
-  /// its potential generic types parameters, if it correspond to an abstract class
-  /// and the corresponding type accessibility and modifiers
-  /// (note: modifiers already include accessibility).
+  /// Simple struct to store a Type's name as a <see cref="string"/>
+  /// and its potential generic types parameters
   /// </summary>
   public readonly struct TypeName : IEquatable<TypeName>
   {
+    public bool IsAbstractClass { get; init; }
+
     public string Name { get; init; }
+
+    public string DeclaredAccessibility { get; init; }
+
+    public string Modifiers { get; init; }
 
     public IEnumerable<ITypeSymbol>? GenericParameters { get; init; }
 
@@ -103,11 +107,14 @@ namespace SetOnceGenerator
     public string FullName => _fullName;
 
     public bool Equals(TypeName other)
-     => FullName == other.FullName;
+     => FullName == other.FullName && IsAbstractClass == other.IsAbstractClass;
 
-    public TypeName(string name, IEnumerable<ITypeSymbol>? genericParameters)
+    public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string modifiers, IEnumerable<ITypeSymbol>? genericParameters)
     {
+      IsAbstractClass = isAbstractClass;
       Name = name;
+      DeclaredAccessibility = declaredAccessibility;
+      Modifiers = modifiers;
       GenericParameters = genericParameters;
       _fullName = name.FormatGenericTypeName(genericParameters);
     }
