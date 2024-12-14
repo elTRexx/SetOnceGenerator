@@ -81,7 +81,7 @@
 /// <summary>
 /// While performing some chained transform in our source generation pipeline,
 /// we are using some custom data structures to better communicate 
-/// between such transformations
+/// between such transformations.
 /// </summary>
 namespace SetOnceGenerator
 {

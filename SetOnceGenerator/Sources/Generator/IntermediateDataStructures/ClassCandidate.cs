@@ -89,8 +89,7 @@ namespace SetOnceGenerator
   /// <summary>
   /// Any found potential class in syntaxic transform is represented as this structure with
   /// its namespace as a <see cref="string"/>, its semantic symbol as a <see cref="INamedTypeSymbol"/>
-  /// and a collection of using statements 
-  /// that this class decalre as a <see cref="IEnumerable{string}"/>
+  /// and a collection of using statements that this class decalre as a <see cref="HashSet{string}"/>.
   /// </summary>
   public readonly struct ClassCandidate
   {

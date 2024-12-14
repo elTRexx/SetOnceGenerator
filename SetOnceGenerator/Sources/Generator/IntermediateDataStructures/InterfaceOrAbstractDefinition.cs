@@ -86,8 +86,8 @@
 namespace SetOnceGenerator
 {
   /// <summary>
-  /// Structure that store an interface <see cref="TypeName"/>,
-  /// it's namespace as a <see cref="string"/>
+  /// Structure that store an interface or abstract class <see cref="SetOnceGenerator.TypeName"/>,
+  /// it's namespace as a <see cref="string"/>,
   /// and a collection it's properties marked with [SetOnce] / [SetNTimes(n)] attribute
   /// as a <see cref="HashSet{PropertyDefinition}"/>
   /// </summary>

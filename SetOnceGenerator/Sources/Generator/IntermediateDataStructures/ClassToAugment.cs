@@ -79,6 +79,7 @@
 #endregion
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 /// <summary>
 /// While performing some chained transform in our source generation pipeline,
@@ -90,10 +91,11 @@ namespace SetOnceGenerator
   /// <summary>
   /// This structure strore any found potential <see cref="ClassCandidate"/> in the semamtic transform step
   /// that have any interfaces (both thoses directly declared and their ancestors)
-  /// matching those found in the same semantic transform step as <see cref="InterfaceDeclarationSyntax"/>.
-  /// Storing its namespace as a <see cref="string"/>, its symbol as a <see cref="INamedTypeSymbol"/>,
+  /// matching those found in the same semantic transform step as <see cref="InterfaceDeclarationSyntax"/>
+  /// or this class itself it is an abstract partial one with SettableNTimes/SettableOnce properties.
+  /// Storing its namespace as a <see cref="string"/>, its type as a <see cref="SetOnceGenerator.TypeName"/>,
   /// a collection of using statements that this class decalre as a <see cref="HashSet{string}"/>
-  /// and a collection of interfaces, this class implement, 
+  /// and the collection of interfaces, this class implement, 
   /// that have any property marked as [SetOnce] / [SetNTimes(n)] as a <see cref="HashSet{InterfaceDefinition}"/>
   /// </summary>
   public readonly struct ClassToAugment

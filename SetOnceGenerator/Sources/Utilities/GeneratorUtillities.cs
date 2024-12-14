@@ -184,6 +184,13 @@ namespace SetOnceGenerator
         && ((interfaceOrAbstractType.IsAbstractClass() && interfaceOrAbstractDefinition.IsAbstractClass)
         || (interfaceOrAbstractType.IsInterfaceType() && !interfaceOrAbstractDefinition.IsAbstractClass));
 
+    /// <summary>
+    /// Given a <see cref="INamedTypeSymbol"/> type, gets all interfaces this type directly implement
+    /// filtering out any interfaces that this type's base type, and all ancestors base types, 
+    /// already implement before it.
+    /// </summary>
+    /// <param name="classType">The type as <see cref="INamedTypeSymbol"> to gets its interfaces directly implemented by it.</param>
+    /// <returns>A collection of <see cref="INamedTypeSymbol"/> of interfaces directly implemented by <paramref name="classType"/></returns>
     public static HashSet<INamedTypeSymbol> GetAllFilteredImplementedInterfaces(this INamedTypeSymbol classType)
     {
       if (classType == default)
@@ -212,6 +219,12 @@ namespace SetOnceGenerator
       return new HashSet<INamedTypeSymbol>(filteredAllInterfaces, SymbolEqualityComparer.Default); ;
     }
 
+    /// <summary>
+    /// Get all interfaces directly implemented by given type as <see cref="INamedTypeSymbol"/>,
+    /// augmened with its base type and all ancestors base types.
+    /// </summary>
+    /// <param name="classType">The type as <see cref="INamedTypeSymbol"> to gets its interfaces directly implemented by it plus its base type an all ancestors base types.</param>
+    /// <returns>A collection of <see cref="INamedTypeSymbol"/> of interfaces directly implemented by <paramref name="classType"/> and its base type with all ancestors base types too.</returns>
     public static HashSet<INamedTypeSymbol> GetAllImplementedInterfacesAndExtendedAbstractClasses(this INamedTypeSymbol classType)
     {
       if (classType == default)
@@ -246,8 +259,9 @@ namespace SetOnceGenerator
     /// and its corresponding <see cref="IEnumerable{string}"/> using statements declarations
     /// to a collection of <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string})}"/>
     /// </summary>
-    /// <param name="interfacesOrAbstractDefinitions">The collection in witch trying to add <paramref name="interfaceOrAbstractPropertyDef"/> and <paramref name="usings"/></param>
-    /// <param name="interfaceOrAbstractPropertyDef">The tuple of the interface type symbol and its property definition trying to be transformed as a <see cref="InterfaceOrAbstractDefinition"/> and then added along side <paramref name="usings"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
+    /// <param name="interfacesOrAbstractDefinitions">The collection in witch to try adding <paramref name="interfaceOrAbstractPropertyDef"/> and <paramref name="usings"/></param>
+    /// <param name="interfaceOrAbstractPropertyDef">The tuple of the interface or the abstract class type symbol and its property definition trying to be transformed as a <see cref="InterfaceOrAbstractDefinition"/> 
+    /// and then added along side <paramref name="usings"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
     /// <param name="usings">the collection of using statements trying to be added along side <paramref name="interfaceOrAbstractPropertyDef"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
     /// <returns><paramref name="interfacesOrAbstractDefinitions"/> augmented with a new <see cref="(InterfaceOrAbstractDefinition, IEnumerable{string})"/> 
     /// if suceed or unchanged else</returns>
@@ -365,6 +379,12 @@ namespace SetOnceGenerator
       return interfacesOrAbstractDefinitions;
     }
 
+    /// <summary>
+    /// Given a property as <see cref="IPropertySymbol"/>, gets all its declared modifiers
+    /// and format them as a string via <see cref="GetModifiersAsString(MemberDeclarationSyntax)"/>
+    /// </summary>
+    /// <param name="propertySymbol">The symbol of a property to gets its corresponding modifiers before formating them as a string.</param>
+    /// <returns>The modifiers of given <paramref name="propertySymbol"/> formated as a string for this source generation.</returns>
     public static string GetModifiersAsString(this IPropertySymbol propertySymbol)
     {
       string modifiersAsString = string.Empty;
@@ -439,14 +459,26 @@ namespace SetOnceGenerator
                 );
     }
 
+    /// <summary>
+    /// Given a property as <see cref="IPropertySymbol"/>, gets the namespace in witch
+    /// it is contained, and return it formated as a using directive.
+    /// </summary>
+    /// <param name="propertySymbol">The symbol of a property</param>
+    /// <returns>The namespace that contains <paramref name="propertySymbol"/> formated as a using directive.</returns>
     public static string GetUsingDirective(this IPropertySymbol propertySymbol)
     {
       var typeNamespace = propertySymbol.Type.ContainingNamespace;
       return string.IsNullOrWhiteSpace(typeNamespace?.Name) ? "" : $"using {typeNamespace?.ToDisplayString()};";
     }
 
+    /// <summary>
+    /// Check if a given type as <see cref="INamedTypeSymbol"/> is the equal to a second one
+    /// discribed with the simplier <see cref="TypeName"/> structure.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The first type to check equality against <paramref name="typeName"/>.</param>
+    /// <param name="typeName">The second type to check equality against <paramref name="namedTypeSymbol"/>.</param>
+    /// <returns>True if both, non null, type have the same name and, eventually, the same type parameters if they both are generic types.</returns>
     public static bool EqualsTo(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
-    //=> namedTypeSymbol.ToTypeName().Equals(typeName);
     {
       if (namedTypeSymbol == default
         || default(TypeName).Equals(typeName))
@@ -456,6 +488,13 @@ namespace SetOnceGenerator
         && namedTypeSymbol.HaveSameGenericTypeParameter(typeName);
     }
 
+    /// <summary>
+    /// Given a <see cref="INamedTypeSymbol"/> type and a <see cref="TypeName"/>, check if for both of them, their corresponding
+    /// type parameters collection are equals.
+    /// </summary>
+    /// <param name="namedTypeSymbol">The first type to check its <see cref="INamedTypeSymbol.TypeParameters"/> against <paramref name="typeName"/>.<see cref="TypeName.GenericParameters"/> ones.</param>
+    /// <param name="typeName">The second type to check its <see cref="TypeName.GenericParameters"/> against <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"/> ones.</param>
+    /// <returns>True if each <see cref="ITypeSymbol"/> of <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"> are equals, in same order of those from <paramref name="typeName"/>.<see cref="TypeName.GenericParameters"/>.</returns>
     public static bool HaveSameGenericTypeParameter(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
     {
       if ((namedTypeSymbol?.TypeArguments.Length ?? -1) != (typeName.GenericParameters?.Count() ?? -2))
@@ -470,6 +509,12 @@ namespace SetOnceGenerator
       return true;
     }
 
+    /// <summary>
+    /// Check if two given <see cref="TypeName"/> have the same generic types parameters collection.
+    /// </summary>
+    /// <param name="typeName1">The first type discribed via the custom <see cref="TypeName"/> structure.</param>
+    /// <param name="typeName2">The second type discribed via the custom <see cref="TypeName"/> structure.</param>
+    /// <returns>True if each <see cref="ITypeSymbol"/> of <paramref name="typeName1"/>.<see cref="TypeName.GenericParameters"> are equals, in same order of those from <paramref name="typeName2"/>.<see cref="TypeName.GenericParameters"/>.</returns>
     public static bool HaveSameGenericTypeParameter(this TypeName typeName1, TypeName typeName2)
     {
       if ((typeName1.GenericParameters?.Count() ?? 0) != (typeName2.GenericParameters?.Count() ?? 0))
@@ -484,6 +529,12 @@ namespace SetOnceGenerator
       return true;
     }
 
+    /// <summary>
+    /// Convert an <see cref="ITypeSymbol"/> into its corresponding simplier custom <see cref="TypeName"/> struture
+    /// </summary>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert.</param>
+    /// <param name="modifiers">A string representation of the modifiers of the type to be converted as <see cref="TypeName"/>.</param>
+    /// <returns>The corresponding simplier string friendly representation of given <paramref name="typeSymbol"/> type structured into the custom <see cref="TypeName"/> structure.</returns>
     public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string modifiers)
     {
       if (typeSymbol == default)
@@ -496,10 +547,6 @@ namespace SetOnceGenerator
       var name = (typeSymbol as INamedTypeSymbol)?
         .GetGenericTypeName(out typeParamerters)
         ?? typeSymbol.GetTypeAliasOrShortName();
-
-      //var genericParameters = namedTypeSymbol.TypeParameters
-      //  .Where(typeParameter => typeParameter is ITypeSymbol)
-      //  .Select(typeParameter => typeParameter as ITypeSymbol);
 
       return new TypeName(
         typeSymbol.IsAbstractClass(),
@@ -532,8 +579,19 @@ namespace SetOnceGenerator
     public static bool HasKind(this ClassDeclarationSyntax cds, SyntaxKind kind)
         => cds.Modifiers.Any(m => m.IsKind(kind));
 
+    /// <summary>
+    /// Given a <see cref="ITypeSymbol"/> check if its corresponding type is an abstract class or not.
+    /// </summary>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to check upon its <see cref="ITypeSymbol.TypeKind"/> if it correspond to a class or not, and if it is abstract or not.</param>
+    /// <returns>True if given <paramref name="typeSymbol"/> <see cref="ITypeSymbol.TypeKind"/> is <see cref="TypeKind.Class"/> AND if <see cref="ISymbol.IsAbstract"/>, else false.</returns>
     public static bool IsAbstractClass(this ITypeSymbol typeSymbol)
       => typeSymbol?.TypeKind == TypeKind.Class && typeSymbol.IsAbstract;
+
+    /// <summary>
+    /// Given a <see cref="ITypeSymbol"/> check if its corresponding type is an interface or not.
+    /// </summary>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to check upon its <see cref="ITypeSymbol.TypeKind"/> if it correspond to an interface or not.</param>
+    /// <returns>True if given <paramref name="typeSymbol"/> <see cref="ITypeSymbol.TypeKind"/> is <see cref="TypeKind.Interface"/>, else false.</returns>
     public static bool IsInterfaceType(this ITypeSymbol typeSymbol)
       => typeSymbol?.TypeKind == TypeKind.Interface;
 
