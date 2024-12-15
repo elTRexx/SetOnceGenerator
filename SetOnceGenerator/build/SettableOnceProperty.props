@@ -6,8 +6,13 @@
 	<PropertyGroup>
 		<RefreshCopy>True</RefreshCopy>
 	</PropertyGroup>
-	
-	<Target Name="CopyPartialWarningsMethods" BeforeTargets="BeforeCompile">
+
+  <!--<PropertyGroup>
+    <HideAbstractProperties>True</HideAbstractProperties>
+    <DefineConstants Condition="'$(HideAbstractProperties)' == 'true'" >$(DefineConstants);HIDE_GENERATED_ABSTRACT_PROPERTIES</DefineConstants>
+  </PropertyGroup>-->
+
+  <Target Name="CopyPartialWarningsMethods" BeforeTargets="BeforeCompile">
 		<Copy SourceFiles="@(SettableNTimesPropertyToCopy)"			  
 			  DestinationFolder="@(SettableNTimesPropertyToCopy -> '$(MSBuildProjectDirectory)\%(RecursiveDir)')"
 			  Condition="$(RefreshCopy) And !Exists('$(MSBuildProjectDirectory)\%(SettableNTimesPropertyToCopy.RecursiveDir)%(SettableNTimesPropertyToCopy.Filename)%(SettableNTimesPropertyToCopy.Extension)')"

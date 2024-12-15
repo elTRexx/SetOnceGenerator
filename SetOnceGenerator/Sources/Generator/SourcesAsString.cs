@@ -75,7 +75,7 @@
 
 // Le corps de la méthode de classe "GetNamespace()" définie ici emprunte du code
 // lui même licencié par la .Net Foundation et est régie par la licence MIT. en 2022
-#endregion 
+#endregion
 #endregion
 
 using Microsoft.CodeAnalysis;
@@ -111,21 +111,34 @@ namespace SetOnceGenerator
     /// its code "compliant" <see cref="string"/> representation
     /// </summary>
     /// <param name="propertyDefinition">The property definition to format</param>
-    /// <param name="interfaceDefinition">The interface definition this <paramref name="propertyDefinition"/> belongs in
+    /// <param name="interfaceOrAbstractDefinition">The interface definition this <paramref name="propertyDefinition"/> belongs in
     /// used to implement the property as an explicit interface implementation to prevent eventual name clashing of properties</param>
     /// <returns>The <paramref name="propertyDefinition"/> formated as a property
     /// backed up by a SettableNTimesProperty<> private field to ensure its constrained settability</returns>
-    public static string FormatSettableProperty(PropertyDefinition propertyDefinition, InterfaceOrAbstractDefinition interfaceDefinition)
+    public static string FormatSettableProperty(PropertyDefinition propertyDefinition, InterfaceOrAbstractDefinition interfaceOrAbstractDefinition)
     {
-      string hiddenFieldName = $"_setNTimes_{interfaceDefinition.FullName.Replace('<', '_').Replace(", ", "_").Replace(">", "")}_{propertyDefinition.Name}";
+      string hiddenFieldName = $"_setNTimes_{interfaceOrAbstractDefinition.FullName.Replace('<', '_').Replace(", ", "_").Replace(">", "")}_{propertyDefinition.Name}";
+
+      string defaultInterfaceImplementationName = interfaceOrAbstractDefinition.IsAbstractClass ?
+        string.Empty : interfaceOrAbstractDefinition.FullName+'.';
+
+      string propertySignature = interfaceOrAbstractDefinition.IsAbstractClass ?
+        $"{propertyDefinition.TypeName.DeclaredAccessibility} {propertyDefinition.TypeName.ContextualModifiers} "
+        : string.Empty;
 
       string propertyCode = $@"
         private readonly SettableNTimesProperty<{propertyDefinition.FullTypeName}> {hiddenFieldName} = new({propertyDefinition.FormatAttributeParameters()});
-        {propertyDefinition.FullTypeName} {interfaceDefinition.FullName}.{propertyDefinition.Name}
+        {propertySignature}{propertyDefinition.FullTypeName} {defaultInterfaceImplementationName}{propertyDefinition.Name}
         {{
             get => {hiddenFieldName}.Value;
             set => {hiddenFieldName}.Value = value;
         }}";
+
+      propertyCode = interfaceOrAbstractDefinition.IsAbstractClass ?
+        $@"
+#if !HIDE_GENERATED_ABSTRACT_PROPERTIES{propertyCode}
+#endif"
+        : propertyCode;
 
       return propertyCode + "\n";
     }
@@ -394,4 +407,3 @@ namespace SetOnceGenerator
     }
   }
 }
-

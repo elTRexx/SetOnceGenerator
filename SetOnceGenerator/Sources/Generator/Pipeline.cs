@@ -161,9 +161,9 @@ namespace SetOnceGenerator
       {
         property = context.SemanticModel.GetDeclaredSymbol(propertyDeclarationSyntax, cancellationToken);
 
-        string modifiers = propertyDeclarationSyntax.GetModifiersAsString();
+        string contextualModifiers = propertyDeclarationSyntax.GetContextualModifiersAsString();
 
-        var propertyDefinition = property?.GetPropertyDefinition(modifiers);
+        var propertyDefinition = property?.GetPropertyDefinition(contextualModifiers);
 
         if (!propertyDefinition.HasValue)
           return null;

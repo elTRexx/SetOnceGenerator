@@ -68,14 +68,14 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
 //termes. 
-#endregion 
+#endregion
 #endregion
 
 using CrossProjectTesting.Sources.Interfaces;
 
 namespace CrossProjectTesting.Sources
 {
-  internal partial class BoolDTO : IBoolDTO
+  internal partial class BoolDTO : ABoolDTO//IBoolDTO
   {
     public BoolDTO(bool myBool)
     {

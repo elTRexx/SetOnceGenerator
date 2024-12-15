@@ -89,8 +89,7 @@ namespace SetOnceGenerator
 {
   /// <summary>
   /// Simple struct to store a Type's name as a <see cref="string"/>,
-  /// its potential generic types parameters, it accessibility and modifiers
-  /// (note, modifiers include accessibility too).
+  /// its potential generic types parameters, it accessibility and contextual modifiers
   /// Include also a flag telling if the corresponding Type is an abstract class or not. 
   /// </summary>
   public readonly struct TypeName : IEquatable<TypeName>
@@ -101,7 +100,7 @@ namespace SetOnceGenerator
 
     public string DeclaredAccessibility { get; init; }
 
-    public string Modifiers { get; init; }
+    public string ContextualModifiers { get; init; }
 
     public IEnumerable<ITypeSymbol>? GenericParameters { get; init; }
 
@@ -111,12 +110,12 @@ namespace SetOnceGenerator
     public bool Equals(TypeName other)
      => FullName == other.FullName && IsAbstractClass == other.IsAbstractClass;
 
-    public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string modifiers, IEnumerable<ITypeSymbol>? genericParameters)
+    public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string contextualModifiers, IEnumerable<ITypeSymbol>? genericParameters)
     {
       IsAbstractClass = isAbstractClass;
       Name = name;
       DeclaredAccessibility = declaredAccessibility;
-      Modifiers = modifiers;
+      ContextualModifiers = contextualModifiers;
       GenericParameters = genericParameters;
       _fullName = name.FormatGenericTypeName(genericParameters);
     }

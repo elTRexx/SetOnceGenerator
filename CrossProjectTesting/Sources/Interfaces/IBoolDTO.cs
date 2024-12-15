@@ -68,7 +68,7 @@
 //Le fait que vous puissiez accéder à cet en-tête signifie que vous avez
 //pris connaissance de la licence CeCILL-B, et que vous en avez accepté les
 //termes. 
-#endregion 
+#endregion
 #endregion
 
 using SetOnceGenerator;
@@ -80,5 +80,16 @@ namespace CrossProjectTesting.Sources.Interfaces
   {
     [SetNTimes(3)]
     bool MyBool { get; set; }
+  }
+
+  public abstract partial class ABoolDTO : IBoolDTO
+  {
+    [SetOnce]
+    public
+#if !HIDE_GENERATED_ABSTRACT_PROPERTIES
+      partial
+#endif
+      int MyInt
+    { get; set; }
   }
 }

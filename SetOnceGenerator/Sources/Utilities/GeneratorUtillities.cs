@@ -146,7 +146,7 @@ namespace SetOnceGenerator
                                     new TypeName(propertyDefinition.TypeName.IsAbstractClass,
                                                   propertyDefinition.TypeName.Name,
                                                   propertyDefinition.TypeName.DeclaredAccessibility,
-                                                  propertyDefinition.TypeName.Modifiers,
+                                                  propertyDefinition.TypeName.ContextualModifiers,
                                                   transformedParamerters),
                                     propertyDefinition.AttributeArgument
                                     );
@@ -294,17 +294,17 @@ namespace SetOnceGenerator
       (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
       INamedTypeSymbol interfaceOrAbstractTypeSymbol,
       IPropertySymbol propertySymbol,
-      string modifiers = "",
+      string contextualModifiers = "",
       HashSet<string>? usings = null
       )
     {
       if (interfaceOrAbstractTypeSymbol.IsInterfaceType())
-        modifiers = string.Empty;
+        contextualModifiers = string.Empty;
 
-      if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(modifiers))
-        modifiers = propertySymbol.GetModifiersAsString();
+      if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(contextualModifiers))
+        contextualModifiers = propertySymbol.GetContextualModifiersAsString();
 
-      var propertyDefinition = propertySymbol.GetPropertyDefinition(modifiers);
+      var propertyDefinition = propertySymbol.GetPropertyDefinition(contextualModifiers);
 
       if (interfaceOrAbstractTypeSymbol == null
         || !propertyDefinition.HasValue)
@@ -380,29 +380,42 @@ namespace SetOnceGenerator
     }
 
     /// <summary>
-    /// Given a property as <see cref="IPropertySymbol"/>, gets all its declared modifiers
-    /// and format them as a string via <see cref="GetModifiersAsString(MemberDeclarationSyntax)"/>
+    /// Given a property as <see cref="IPropertySymbol"/>, gets all its declared contextual modifiers
+    /// and format them as a string via <see cref="GetContextualModifiersAsString(MemberDeclarationSyntax)"/>
     /// </summary>
-    /// <param name="propertySymbol">The symbol of a property to gets its corresponding modifiers before formating them as a string.</param>
-    /// <returns>The modifiers of given <paramref name="propertySymbol"/> formated as a string for this source generation.</returns>
-    public static string GetModifiersAsString(this IPropertySymbol propertySymbol)
+    /// <param name="propertySymbol">The symbol of a property to gets its corresponding contextual modifiers before formating them as a string.</param>
+    /// <returns>The contextual modifiers of given <paramref name="propertySymbol"/> formated as a string for this source generation.</returns>
+    public static string GetContextualModifiersAsString(this IPropertySymbol propertySymbol)
     {
-      string modifiersAsString = string.Empty;
+      string contextualModifiersAsString = string.Empty;
 
       foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
       {
-        modifiersAsString = (syntaxReference.GetSyntax() as MemberDeclarationSyntax)
-          ?.GetModifiersAsString() ?? modifiersAsString;
+        contextualModifiersAsString = (syntaxReference.GetSyntax() as MemberDeclarationSyntax)
+          ?.GetContextualModifiersAsString() ?? contextualModifiersAsString;
 
-        if (!string.IsNullOrWhiteSpace(modifiersAsString))
-          return modifiersAsString;
+        if (!string.IsNullOrWhiteSpace(contextualModifiersAsString))
+          return contextualModifiersAsString;
       }
 
-      return modifiersAsString;
+      return contextualModifiersAsString;
     }
 
-    public static string GetModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
-      => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
+    public static string GetContextualModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
+    //  => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
+    {
+      string contextualModifiersAsString = string.Empty;
+
+      var contextualModifiers = memberDeclarationSyntax?.Modifiers
+        .Where(syntaxToken => syntaxToken.IsContextualKeyword());
+
+      if ((contextualModifiers?.Count() ?? 0) == 0)
+        return contextualModifiersAsString;
+
+      contextualModifiersAsString = string.Join(" ", contextualModifiers);
+
+      return contextualModifiersAsString;
+    }
 
     /// <summary>
     /// Given a <see cref="IPropertySymbol"/> <paramref name="propertySymbol"/>,
@@ -410,7 +423,7 @@ namespace SetOnceGenerator
     /// </summary>
     /// <param name="propertySymbol">The compilation symbol of a property to be returned structure as a <see cref="PropertyDefinition"/></param>
     /// <returns>A structured <see cref="PropertyDefinition"/> data corresponding given <paramref name="propertySymbol"/> parameter.</returns>
-    public static PropertyDefinition? GetPropertyDefinition(this IPropertySymbol propertySymbol, string modifiers)
+    public static PropertyDefinition? GetPropertyDefinition(this IPropertySymbol propertySymbol, string contextualModifiers)
     {
       var attributes = propertySymbol?.GetAttributes();
 
@@ -452,7 +465,7 @@ namespace SetOnceGenerator
                 //  propertyTypeName,
                 //  SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility),
                 //  typeParamerters),
-                propertySymbol.Type.ToTypeName(modifiers),
+                propertySymbol.Type.ToTypeName(contextualModifiers),
                 new AttributeDefinition(
                     maxSet
                     )
@@ -533,9 +546,9 @@ namespace SetOnceGenerator
     /// Convert an <see cref="ITypeSymbol"/> into its corresponding simplier custom <see cref="TypeName"/> struture
     /// </summary>
     /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert.</param>
-    /// <param name="modifiers">A string representation of the modifiers of the type to be converted as <see cref="TypeName"/>.</param>
+    /// <param name="contextualModifiers">A string representation of the contextual modifiers of the type to be converted as <see cref="TypeName"/>.</param>
     /// <returns>The corresponding simplier string friendly representation of given <paramref name="typeSymbol"/> type structured into the custom <see cref="TypeName"/> structure.</returns>
-    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string modifiers)
+    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string contextualModifiers)
     {
       if (typeSymbol == default)
         return default;
@@ -552,7 +565,7 @@ namespace SetOnceGenerator
         typeSymbol.IsAbstractClass(),
         name,
         SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility),
-        modifiers,
+        contextualModifiers,
         typeParamerters);
     }
 
