@@ -1,6 +1,6 @@
 <!--@author Aurélien Pascal Maignan-->
 
-<!--@date 30 June 2024-->
+<!--@date 15 December 2024-->
 
 # SettableOnceProperty
 
@@ -24,13 +24,15 @@ When appropriately marked, such properties use an hidden `SettableNTimesProperty
 
 If you want to mark a property being settable max `n` times, you have to follow thoses rules :
 
-* Define such properties inside an `interface`
+* Define such properties inside an `interface` or an `abstract class` (since C# 13)
 
 * add `using SetOnceGenerator;` namespace
 
 * Add above such properties either `[SetOnce]` attribute or `[SetNTimes(n)]` attribue
 
 * On any concrete classes that implement that given `interface`, make sure to modify it to be `partial`
+
+* Or on any `abstract class` have such properties, make sure to declare them all as `partial` including the `abstract class` itself (starting from C# 13).
 
 * Optionally, you can add your own logic to handle warnings when trying to get or set the property extending `SettableNTimesProperty.GetWarning()`  and `SettableNTimesProperty.SetWarning()` method
 
@@ -81,6 +83,48 @@ public interface IDTO
 
 If you want to allow multiple `set`, up to `n` times maximum, use `[SetNTimes(n)]` attribute instead of `[SetOnce]`
 
+### Abstract partial properties
+
+Starting from C# 13.0, we can define partial properties, implemented in another location. We take advantage of that feature to offer using our `[SetNTimes]` and `[SetOnce]` attributes on properties definied in some `abstract class` :
+
+```C#
+using SetOnceGenerator;
+public abstract partial class ADTO : IDTO
+{
+    [SetOnce]
+    public partial bool IsFromAbstractClass {get; set;}
+}
+```
+
+Now you can modify your class inheriting from the `abstract class` to not be partial any more and access the `abstract class` defined properties directly :
+
+```
+internal class DTO : ADTO
+{
+    public DTO(int id, string name = "Default_DTO_Name")
+    {
+        ((IDTO)this).ID = id;
+        ((IDTO)this).Name = name;
+        IsFromAbstractClass = true;
+    }
+}
+```
+
+*Do note that if the concrete class also directly implement some interfaces that define such of our settable properties, then it should be redefined as `partial` again :*
+
+```C#
+internal partial class DTO : ADTO, IAnotherDTO
+{
+    public DTO(int id, string name = "Default_DTO_Name", string aSettableProperty = "")
+    {
+        ((IDTO)this).ID = id;
+        ((IDTO)this).Name = name;
+        IsFromAbstractClass = true;
+        ((IAnotherDTO)this).ASettableProperty = aSettableProperty;  
+    }
+}
+```
+
 ### Optional warning handling
 
 By default, nothing warn you when you try to
@@ -113,7 +157,9 @@ partial void SetWarning()
 }
 ```
 
-## Disable automatic copy of Custom_Warnings folder
+## Customize genrator behaviors
+
+### Disable automatic copy of Custom_Warnings folder
 
 If you don't wan't to handle you custom logic of `Get` and `Set` warning, and allow to remove the automatically generated Custom_Warnings folder and `SettableNTimesProperty` class, then you can edit your .csproj file to set `RefreshCopy` to `false` :
 
@@ -136,7 +182,7 @@ If you don't wan't to handle you custom logic of `Get` and `Set` warning, and al
 </Project>
 ```
 
-## Embedding attributes
+### Embedding attributes
 
 Following [Andrew Lock](https://andrewlock.net/creating-a-source-generator-part-8-solving-the-source-generator-marker-attribute-problem-part2/) tutorial,
 I ended up using a public attributes DLL to store and share my `[SetNTimes(n)]` and `[SetOnce]` attributes.
@@ -150,16 +196,16 @@ in your `.csproj` consuming project properties :
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<DefineConstants>SET_ONCE_GENERATOR_EMBED_ATTRIBUTES</DefineConstants>
+    <DefineConstants>SET_ONCE_GENERATOR_EMBED_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
-    
+
 </Project>
 ```
 
-## Excluding generated SettableNTimesProperty\<T>
+### Excluding generated SettableNTimesProperty\<T>
 
 The backbone of those decorated properties to be set up to `n` times is in the automatically generated and embedded `SettableNTimesProperty<T>` partial class.
 
@@ -171,17 +217,40 @@ If you prefer to exclude it and furnish your own implementation of this partial 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<DefineConstants>SET_ONCE_GENERATOR_EXCLUDE_SETTABLE_N_TIMES_PROPERTY</DefineConstants>
+    <DefineConstants>SET_ONCE_GENERATOR_EXCLUDE_SETTABLE_N_TIMES_PROPERTY</DefineConstants>
   </PropertyGroup>
-    
+
+</Project>
+```
+
+### Hide generated partial properties from abstract classes
+
+If your project use a C# version prior to 13.0, you can't define `partial` properties, and so you cannot define settable properties in `abstract class`, only in `interface`.
+
+Since you have control on your own code, you can prevent yourself to use the `[SetNTimes]` or `[SetOnce]` attribute on your own `abstract class` properties.
+
+But, even since no corresponding code should be generated, as you doesn't have direct control on it, we expose a constant, `HIDE_GENERATED_ABSTRACT_PROPERTIES`, that you can define in your `.csproj` to hide the generated settable `partial` property :
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>HIDE_GENERATED_PARTIAL_PROPERTIES</DefineConstants>
+  </PropertyGroup>
+
 </Project>
 ```
 
 ## Note
 
-I first used a bool backend field to manage this but ended up generalising it to be settable `n` times.
+I first used a bool backend field to manage this but ended up generalising it to be settable `n` times. 
 
 Even though this is now the underneath mechanism , I kept naming it SettableOnceProperty, since I suppose it is the most common scenario, and what people are looking for.

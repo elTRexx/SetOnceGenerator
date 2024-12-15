@@ -6,7 +6,7 @@
 	<LangVersion>13.0</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!--<DefineConstants>HIDE_GENERATED_ABSTRACT_PROPERTIES</DefineConstants>-->
+    <!--<DefineConstants>HIDE_GENERATED_PARTIAL_PROPERTIES</DefineConstants>-->
     <!--<DefineConstants>SET_ONCE_GENERATOR_EMBED_ATTRIBUTES</DefineConstants>-->
   </PropertyGroup>
 

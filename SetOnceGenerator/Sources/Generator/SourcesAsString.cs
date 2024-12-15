@@ -1,6 +1,6 @@
 ﻿#region CeCill-C license
 #region English version
-//Copyright Aurélien Pascal Maignan, (30 June 2024) 
+//Copyright Aurélien Pascal Maignan, (15 December 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
@@ -38,7 +38,7 @@
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
+//Copyright Aurélien Pascal Maignan, (15 Décembre 2024) 
 
 //aurelien.maignan@protonmail.com
 
@@ -136,7 +136,7 @@ namespace SetOnceGenerator
 
       propertyCode = interfaceOrAbstractDefinition.IsAbstractClass ?
         $@"
-#if !HIDE_GENERATED_ABSTRACT_PROPERTIES{propertyCode}
+#if !{GeneratorUtillities.HidePartialPropertyConstant}{propertyCode}
 #endif"
         : propertyCode;
 

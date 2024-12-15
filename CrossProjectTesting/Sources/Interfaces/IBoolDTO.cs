@@ -1,6 +1,6 @@
 ﻿#region CeCill-B license
 #region English version
-//Copyright Aurélien Pascal Maignan, (30 June 2024) 
+//Copyright Aurélien Pascal Maignan, (15 December 2024) 
 
 //[aurelien.maignan@protonmail.com]
 
@@ -35,7 +35,7 @@
 #endregion
 
 #region French version
-//Copyright Aurélien Pascal Maignan, (30 Juin 2024) 
+//Copyright Aurélien Pascal Maignan, (15 Décembre 2024) 
 
 //aurelien.maignan@protonmail.com
 
@@ -86,7 +86,7 @@ namespace CrossProjectTesting.Sources.Interfaces
   {
     [SetOnce]
     public
-#if !HIDE_GENERATED_ABSTRACT_PROPERTIES
+#if !HIDE_GENERATED_PARTIAL_PROPERTIES
       partial
 #endif
       int MyInt

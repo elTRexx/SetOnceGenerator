@@ -9,25 +9,25 @@ This project and its entire sources codes are under the CeCill-C license:
 <details>
     <summary>Header</summary>
 
-    Copyright Aurélien Pascal Maignan, (20 August 2023) 
-
+    Copyright Aurélien Pascal Maignan, (15 December 2024) 
+    
     aurelien.maignan@protonmail.com
-
+    
     This software is a computer program whose purpose is to automatically generate source code
     that will, automatically, constrain the set of class's properties up to a given maximum times
-
+    
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
     modify and/ or redistribute the software under the terms of the CeCILL-C
     license as circulated by CEA, CNRS and INRIA at the following URL
     "http://www.cecill.info". 
-
+    
     As a counterpart to the access to the source code and  rights to copy,
     modify and redistribute granted by the license, users are provided only
     with a limited warranty  and the software's author,  the holder of the
     economic rights, and the successive licensors  have only  limited
     liability. 
-
+    
     In this respect, the user's attention is drawn to the risks associated
     with loading,  using,  modifying and/or developing or reproducing the
     software by the user in light of its specific status of free software,
@@ -38,22 +38,23 @@ This project and its entire sources codes are under the CeCill-C license:
     requirements in conditions enabling the security of their systems and/or 
     data to be ensured and, more generally, to use and operate it in the 
     same conditions as regards security. 
-
+    
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms."
+
 </details>    
 <details>
     <summary>License</summary>
 
     CeCILL-C FREE SOFTWARE LICENSE AGREEMENT
     
-
+    
         Notice
-
+    
     This Agreement is a Free Software license agreement that is the result
     of discussions between its authors in order to ensure compliance with
     the two main principles guiding its drafting:
-
+    
         * firstly, compliance with the principles governing the distribution
           of Free Software: access to source code, broad rights granted to
           users,
@@ -61,38 +62,38 @@ This project and its entire sources codes are under the CeCill-C license:
           it is conformant, both as regards the law of torts and
           intellectual property law, and the protection that it offers to
           both authors and holders of the economic rights over software.
-
+    
     The authors of the CeCILL-C (for Ce[a] C[nrs] I[nria] L[ogiciel] L[ibre])
     license are:
-
+    
     Commissariat à l'Energie Atomique - CEA, a public scientific, technical
     and industrial research establishment, having its principal place of
     business at 25 rue Leblanc, immeuble Le Ponant D, 75015 Paris, France.
-
+    
     Centre National de la Recherche Scientifique - CNRS, a public scientific
     and technological establishment, having its principal place of business
     at 3 rue Michel-Ange, 75794 Paris cedex 16, France.
-
+    
     Institut National de Recherche en Informatique et en Automatique -
     INRIA, a public scientific and technological establishment, having its
     principal place of business at Domaine de Voluceau, Rocquencourt, BP
     105, 78153 Le Chesnay cedex, France.
-
-
+    
+    
         Preamble
-
+    
     The purpose of this Free Software license agreement is to grant users
     the right to modify and re-use the software governed by this license.
-
+    
     The exercising of this right is conditional upon the obligation to make
     available to the community the modifications made to the source code of
     the software so as to contribute to its evolution.
-
+    
     In consideration of access to the source code and the rights to copy,
     modify and redistribute granted by the license, users are provided only
     with a limited warranty and the software's author, the holder of the
     economic rights, and the successive licensors only have limited liability.
-
+    
     In this respect, the risks associated with loading, using, modifying
     and/or developing or reproducing the software by the user are brought to
     the user's attention, given its Free Software status, which may make it
@@ -561,6 +562,7 @@ This project and its entire sources codes are under the CeCill-C license:
     
     
     Version 1.0 dated 2006-09-05.
+
 </details>
 </details>
 
@@ -575,10 +577,10 @@ This project and its entire sources codes are under the CeCill-B license:
 <details>
     <summary>Header</summary>
 
-    Copyright Aurélien Pascal Maignan, (20 August 2023) 
-
+    Copyright Aurélien Pascal Maignan, (15 December 2024) 
+    
     aurelien.maignan@protonmail.com
-
+    
     This software is a computer program whose purpose is
     to test the source generator software named "SetOnceGenerator"
     
@@ -587,13 +589,13 @@ This project and its entire sources codes are under the CeCill-B license:
     modify and/ or redistribute the software under the terms of the CeCILL-B
     license as circulated by CEA, CNRS and INRIA at the following URL
     "http://www.cecill.info". 
-
+    
     As a counterpart to the access to the source code and  rights to copy,
     modify and redistribute granted by the license, users are provided only
     with a limited warranty  and the software's author,  the holder of the
     economic rights, and the successive licensors  have only  limited
     liability. 
-
+    
     In this respect, the user's attention is drawn to the risks associated
     with loading,  using,  modifying and/or developing or reproducing the
     software by the user in light of its specific status of free software,
@@ -604,9 +606,10 @@ This project and its entire sources codes are under the CeCill-B license:
     requirements in conditions enabling the security of their systems and/or 
     data to be ensured and, more generally, to use and operate it in the 
     same conditions as regards security. 
-
+    
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-B license and that you accept its terms.
+
 </details>
 <details>
     <summary>License</summary>
@@ -1125,6 +1128,7 @@ This project and its entire sources codes are under the CeCill-B license:
     
     
     Version 1.0 dated 2006-09-05.
+
 </details>
 </details>
 
@@ -1154,13 +1158,15 @@ When appropriately marked, such properties use an hidden `SettableNTimesProperty
 
 If you want to mark a property being settable max `n` times, you have to follow thoses rules :
 
-* Define such properties inside an `interface`
+* Define such properties inside an `interface` or an `abstract class` (since C# 13)
 
 * add `using SetOnceGenerator;` namespace
 
 * Add above such properties either `[SetOnce]` attribute or `[SetNTimes(n)]` attribue
 
 * On any concrete classes that implement that given `interface`, make sure to modify it to be `partial`
+
+* Or on any `abstract class` have such properties, make sure to declare them all as `partial` including the `abstract class` itself (starting from C# 13).
 
 * Optionally, you can add your own logic to handle warnings when trying to get or set the property extending `SettableNTimesProperty.GetWarning()`  and `SettableNTimesProperty.SetWarning()` method
 
@@ -1211,6 +1217,48 @@ public interface IDTO
 
 If you want to allow multiple `set`, up to `n` times maximum, use `[SetNTimes(n)]` attribute instead of `[SetOnce]`
 
+### Abstract partial properties
+
+Starting from C# 13.0, we can define partial properties, implemented in another location. We take advantage of that feature to offer using our `[SetNTimes]` and `[SetOnce]` attributes on properties definied in some `abstract class` :
+
+```C#
+using SetOnceGenerator;
+public abstract partial class ADTO : IDTO
+{
+    [SetOnce]
+    public partial bool IsFromAbstractClass {get; set;}
+}
+```
+
+Now you can modify your class inheriting from the `abstract class` to not be partial any more and access the `abstract class` defined properties directly :
+
+```
+internal class DTO : ADTO
+{
+    public DTO(int id, string name = "Default_DTO_Name")
+    {
+        ((IDTO)this).ID = id;
+        ((IDTO)this).Name = name;
+        IsFromAbstractClass = true;
+    }
+}
+```
+
+*Do note that if the concrete class also directly implement some interfaces that define such of our settable properties, then it should be redefined as `partial` again :*
+
+```C#
+internal partial class DTO : ADTO, IAnotherDTO
+{
+    public DTO(int id, string name = "Default_DTO_Name", string aSettableProperty = "")
+    {
+        ((IDTO)this).ID = id;
+        ((IDTO)this).Name = name;
+        IsFromAbstractClass = true;
+        ((IAnotherDTO)this).ASettableProperty = aSettableProperty;  
+    }
+}
+```
+
 ### Optional warning handling
 
 By default, nothing warn you when you try to
@@ -1243,7 +1291,9 @@ partial void SetWarning()
 }
 ```
 
-## Disable automatic copy of Custom_Warnings folder
+## Customize genrator behaviors
+
+### Disable automatic copy of Custom_Warnings folder
 
 If you don't wan't to handle you custom logic of `Get` and `Set` warning, and allow to remove the automatically generated Custom_Warnings folder and `SettableNTimesProperty` class, then you can edit your .csproj file to set `RefreshCopy` to `false` :
 
@@ -1266,7 +1316,7 @@ If you don't wan't to handle you custom logic of `Get` and `Set` warning, and al
 </Project>
 ```
 
-## Embedding attributes
+### Embedding attributes
 
 Following [Andrew Lock](https://andrewlock.net/creating-a-source-generator-part-8-solving-the-source-generator-marker-attribute-problem-part2/) tutorial,
 I ended up using a public attributes DLL to store and share my `[SetNTimes(n)]` and `[SetOnce]` attributes.
@@ -1280,16 +1330,16 @@ in your `.csproj` consuming project properties :
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<DefineConstants>SET_ONCE_GENERATOR_EMBED_ATTRIBUTES</DefineConstants>
+    <DefineConstants>SET_ONCE_GENERATOR_EMBED_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
-    
+
 </Project>
 ```
 
-## Excluding generated SettableNTimesProperty\<T>
+### Excluding generated SettableNTimesProperty\<T>
 
 The backbone of those decorated properties to be set up to `n` times is in the automatically generated and embedded `SettableNTimesProperty<T>` partial class.
 
@@ -1301,12 +1351,35 @@ If you prefer to exclude it and furnish your own implementation of this partial 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<DefineConstants>SET_ONCE_GENERATOR_EXCLUDE_SETTABLE_N_TIMES_PROPERTY</DefineConstants>
+    <DefineConstants>SET_ONCE_GENERATOR_EXCLUDE_SETTABLE_N_TIMES_PROPERTY</DefineConstants>
   </PropertyGroup>
-    
+
+</Project>
+```
+
+### Hide generated partial properties from abstract classes
+
+If your project use a C# version prior to 13.0, you can't define `partial` properties, and so you cannot define settable properties in `abstract class`, only in `interface`.
+
+Since you have control on your own code, you can prevent yourself to use the `[SetNTimes]` or `[SetOnce]` attribute on your own `abstract class` properties.
+
+But, even since no corresponding code should be generated, as you doesn't have direct control on it, we expose a constant, `HIDE_GENERATED_ABSTRACT_PROPERTIES`, that you can define in your `.csproj` to hide the generated settable `partial` property :
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>HIDE_GENERATED_PARTIAL_PROPERTIES</DefineConstants>
+  </PropertyGroup>
+
 </Project>
 ```
 
@@ -1315,4 +1388,3 @@ If you prefer to exclude it and furnish your own implementation of this partial 
 I first used a bool backend field to manage this but ended up generalising it to be settable `n` times. 
 
 Even though this is now the underneath mechanism , I kept naming it SettableOnceProperty, since I suppose it is the most common scenario, and what people are looking for.
-
