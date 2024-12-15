@@ -172,19 +172,6 @@ namespace SetOnceGenerator
         if (interfaceOrAbstractDeclarationSyntax == null)
           return null;
 
-        #region _boolLogic
-        //bool isInterface = true;
-        //bool isClass = true;
-        //bool hasAbstract = true;
-
-        //if (!(isInterface || (isClass && hasAbstract)))
-        //  ;
-        //if (!isInterface && !(isClass && hasAbstract))
-        //  ;
-        //if (!isInterface && (!isClass || !hasAbstract))
-        //  ; 
-        #endregion
-
         if (interfaceOrAbstractDeclarationSyntax is not InterfaceDeclarationSyntax @interface
             && (interfaceOrAbstractDeclarationSyntax is not ClassDeclarationSyntax @class
               || !@class.HasKind(SyntaxKind.AbstractKeyword)))
