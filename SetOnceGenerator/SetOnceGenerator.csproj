@@ -8,9 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.1.6</Version>
-	<PackageVersion>0.1.6</PackageVersion>
-	<PackageReleaseNotes>Code has been refactored to handle abstract classes in top of interfaces when defining settable properties. This is possible now that C# 13.0 allow partial property definition.</PackageReleaseNotes>
+	<Version>0.1.8</Version>
+	<PackageVersion>0.1.8</PackageVersion>
+	<PackageReleaseNotes>Corrected a bug that a settable property whose type is a generic one failed to retreive its DeclaredAccessibility.</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>

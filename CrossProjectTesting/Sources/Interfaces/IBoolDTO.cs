@@ -92,4 +92,10 @@ namespace CrossProjectTesting.Sources.Interfaces
       int MyInt
     { get; set; }
   }
+
+  public abstract partial class ABoolDTO2<T> : ABoolDTO
+  {
+    [SetOnce]
+    public partial T MyTValue { get; set; }
+  }
 }

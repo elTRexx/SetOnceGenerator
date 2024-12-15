@@ -296,15 +296,15 @@ namespace SetOnceGenerator
       (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
       INamedTypeSymbol interfaceOrAbstractTypeSymbol,
       IPropertySymbol propertySymbol,
-      string contextualModifiers = "",
+      string contextualModifiers,
       HashSet<string>? usings = null
       )
     {
       if (interfaceOrAbstractTypeSymbol.IsInterfaceType())
         contextualModifiers = string.Empty;
 
-      if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(contextualModifiers))
-        contextualModifiers = propertySymbol.GetContextualModifiersAsString();
+      //if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(contextualModifiers))
+      //  contextualModifiers = propertySymbol.GetContextualModifiersAsString();
 
       var propertyDefinition = propertySymbol.GetPropertyDefinition(contextualModifiers);
 
@@ -381,27 +381,27 @@ namespace SetOnceGenerator
       return interfacesOrAbstractDefinitions;
     }
 
-    /// <summary>
-    /// Given a property as <see cref="IPropertySymbol"/>, gets all its declared contextual modifiers
-    /// and format them as a string via <see cref="GetContextualModifiersAsString(MemberDeclarationSyntax)"/>
-    /// </summary>
-    /// <param name="propertySymbol">The symbol of a property to gets its corresponding contextual modifiers before formating them as a string.</param>
-    /// <returns>The contextual modifiers of given <paramref name="propertySymbol"/> formated as a string for this source generation.</returns>
-    public static string GetContextualModifiersAsString(this IPropertySymbol propertySymbol)
-    {
-      string contextualModifiersAsString = string.Empty;
+    ///// <summary>
+    ///// Given a property as <see cref="IPropertySymbol"/>, gets all its declared contextual modifiers
+    ///// and format them as a string via <see cref="GetContextualModifiersAsString(MemberDeclarationSyntax)"/>
+    ///// </summary>
+    ///// <param name="propertySymbol">The symbol of a property to gets its corresponding contextual modifiers before formating them as a string.</param>
+    ///// <returns>The contextual modifiers of given <paramref name="propertySymbol"/> formated as a string for this source generation.</returns>
+    //public static string GetContextualModifiersAsString(this IPropertySymbol propertySymbol)
+    //{
+    //  string contextualModifiersAsString = string.Empty;
 
-      foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
-      {
-        contextualModifiersAsString = (syntaxReference.GetSyntax() as MemberDeclarationSyntax)
-          ?.GetContextualModifiersAsString() ?? contextualModifiersAsString;
+    //  foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
+    //  {
+    //    contextualModifiersAsString = (syntaxReference.GetSyntax() as MemberDeclarationSyntax)
+    //      ?.GetContextualModifiersAsString() ?? contextualModifiersAsString;
 
-        if (!string.IsNullOrWhiteSpace(contextualModifiersAsString))
-          return contextualModifiersAsString;
-      }
+    //    if (!string.IsNullOrWhiteSpace(contextualModifiersAsString))
+    //      return contextualModifiersAsString;
+    //  }
 
-      return contextualModifiersAsString;
-    }
+    //  return contextualModifiersAsString;
+    //}
 
     public static string GetContextualModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
     //  => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
@@ -455,19 +455,17 @@ namespace SetOnceGenerator
       if (maxSet <= 0)
         return default;
 
-      IEnumerable<ITypeSymbol>? typeParamerters = null;
+      //IEnumerable<ITypeSymbol>? typeParamerters = null;
 
-      string propertyTypeName = (propertySymbol!.Type as INamedTypeSymbol)?
-                                      .GetGenericTypeName(out typeParamerters)
-                                      ?? propertySymbol.Type.GetTypeAliasOrShortName();
+      //string propertyTypeName = (propertySymbol!.Type as INamedTypeSymbol)?
+      //                                .GetGenericTypeName(out _)
+      //                                ?? propertySymbol.Type.GetTypeAliasOrShortName();
+
+      string declaredAccessibility = SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility);
 
       return new PropertyDefinition(
                 propertySymbol.Name,
-                //new TypeName(propertySymbol.IsAbstract,
-                //  propertyTypeName,
-                //  SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility),
-                //  typeParamerters),
-                propertySymbol.Type.ToTypeName(contextualModifiers),
+                propertySymbol.Type.ToTypeName(declaredAccessibility, contextualModifiers),
                 new AttributeDefinition(
                     maxSet
                     )
@@ -547,28 +545,36 @@ namespace SetOnceGenerator
     /// <summary>
     /// Convert an <see cref="ITypeSymbol"/> into its corresponding simplier custom <see cref="TypeName"/> struture
     /// </summary>
-    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert.</param>
+    /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert</param>
+    /// <param name="declaredAccessibility">The declared accessibility of the <paramref name="typeSymbol"/> to convert</param>
     /// <param name="contextualModifiers">A string representation of the contextual modifiers of the type to be converted as <see cref="TypeName"/>.</param>
     /// <returns>The corresponding simplier string friendly representation of given <paramref name="typeSymbol"/> type structured into the custom <see cref="TypeName"/> structure.</returns>
-    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string contextualModifiers)
+    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string declaredAccessibility, string contextualModifiers)
     {
       if (typeSymbol == default)
         return default;
 
       IEnumerable<ITypeSymbol>? typeParamerters = null;
 
-      var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+      //var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
 
       var name = (typeSymbol as INamedTypeSymbol)?
         .GetGenericTypeName(out typeParamerters)
         ?? typeSymbol.GetTypeAliasOrShortName();
 
+      if (string.IsNullOrEmpty(declaredAccessibility))
+        declaredAccessibility = SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility);
+      //if (string.IsNullOrEmpty(contextualModifiers))
+      //{
+      //  contextualModifiers = typeSymbol.
+      //}
+
       return new TypeName(
-        typeSymbol.IsAbstractClass(),
-        name,
-        SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility),
-        contextualModifiers,
-        typeParamerters);
+      typeSymbol.IsAbstractClass(),
+      name,
+      declaredAccessibility,
+      contextualModifiers,
+      typeParamerters);
     }
 
     /// <summary>

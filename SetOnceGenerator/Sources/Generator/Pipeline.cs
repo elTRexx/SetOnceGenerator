@@ -76,6 +76,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using static SetOnceGenerator.GeneratorUtillities;
 using static SetOnceGenerator.SourcesAsString;
@@ -163,6 +164,8 @@ namespace SetOnceGenerator
 
         string contextualModifiers = propertyDeclarationSyntax.GetContextualModifiersAsString();
 
+        //Trace.WriteLine($"\n  [1] Current {propertyDeclarationSyntax.GetType().Name} have this contextual modifier {contextualModifiers}\n");
+
         var propertyDefinition = property?.GetPropertyDefinition(contextualModifiers);
 
         if (!propertyDefinition.HasValue)
@@ -229,7 +232,10 @@ namespace SetOnceGenerator
           continue;
         }
         if (foundCandidate.IsFoundProperty)
+        {
+          //Trace.WriteLine($"\n  [2.a] Given {foundCandidate.GetType().Name} is a property (accessibility: {foundCandidate.FoundInterfaceOrAbstractProperty!.Value.Item2.TypeName.DeclaredAccessibility}, fullname: {foundCandidate.FoundInterfaceOrAbstractProperty!.Value.Item2.FullTypeName})\n");
           interfacesOrAbstractDefinitions.AddTuple(foundCandidate.FoundInterfaceOrAbstractProperty!.Value, foundCandidate.Usings);
+        }
       }
 
       ///Filter candidate classes to actual classes to augment
@@ -277,11 +283,14 @@ namespace SetOnceGenerator
                || SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetNTimesAttributeType))
               {
                 usingDirective = propertySymbol.GetUsingDirective();
+
+                //var contextualModifiers = propertySymbol.GetContextualModifiersAsString();
+
                 usingDirectives = usingDirective == default ?
                   default
                   : new HashSet<string>([usingDirective]);
 
-                interfacesOrAbstractDefinitions.AddTuple(interfaceTypeSymbol, propertySymbol, usings: usingDirectives);
+                interfacesOrAbstractDefinitions.AddTuple(interfaceTypeSymbol, propertySymbol, string.Empty, usingDirectives);
 
                 if (!isCurrentClassAdded
                   //&& !classes.Any(@class => @class.Item1.Equals(classCandidate.Item1))
@@ -322,7 +331,7 @@ namespace SetOnceGenerator
         if (classCandidate.Item1.ClassType == null)
           continue;
 
-        currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty), classCandidate.Item1.Namespace);
+        currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty, string.Empty), classCandidate.Item1.Namespace);
         currentClassToAugment.UsingNamespaces.UnionWith(classCandidate.Item2);
 
         augmentedInterfacesOrAbstracts = [];
@@ -355,7 +364,7 @@ namespace SetOnceGenerator
                       //                     interfaceOrAbstractDefinition.Item1.TypeName.Name,
                       //                     SyntaxFacts.GetText(interfaceOrAbstractType.DeclaredAccessibility),
                       //                     interfaceOrAbstractType.TypeArguments),
-                      interfaceType.ToTypeName(string.Empty),
+                      interfaceType.ToTypeName(string.Empty, string.Empty),
                       interfaceOrAbstractDefinition.Item1.NameSpace,
                       interfaceOrAbstractDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceOrAbstractDefinition.Item1.TypeName.GenericParameters!, interfaceType.TypeArguments)
                      );
@@ -381,6 +390,8 @@ namespace SetOnceGenerator
 
       foreach (var interfaceOrAbstractDefinition in interfacesOrAbstractDefinitions)
       {
+        //Trace.WriteLine($"\n  [2.b] parse all abstract class for their settable properties :\n");
+
         if (!interfaceOrAbstractDefinition.Item1.IsAbstractClass)
           continue;
 
@@ -396,6 +407,9 @@ namespace SetOnceGenerator
         {
           foreach (var abstractClassToAugment in alreadyPresentAbstractClassesToAugment)
           {
+            //Trace.WriteLine($"\n  [2.c] Found an already existing one ({abstractClassToAugment.TypeName.FullName})\n");
+            //Trace.WriteLine($"\n  [2.c] Add its current properties to it [{string.Join(", ", interfaceOrAbstractDefinition.Item1.Properties.Select(prop => "(acc: "+prop.TypeName.DeclaredAccessibility+", mod: "+prop.TypeName.ContextualModifiers+", name: "+prop.TypeName.FullName+")"))}]\n");
+
             abstractClassToAugment.InterfacesOrAbstractsDefinitions.Add(interfaceOrAbstractDefinition.Item1);
             abstractClassToAugment.UsingNamespaces.UnionWith(interfaceOrAbstractDefinition.Item2);
           }
