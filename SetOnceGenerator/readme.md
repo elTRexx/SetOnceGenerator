@@ -98,7 +98,7 @@ public abstract partial class ADTO : IDTO
 
 Now you can modify your class inheriting from the `abstract class` to not be partial any more and access the `abstract class` defined properties directly :
 
-```
+```C#
 internal class DTO : ADTO
 {
     public DTO(int id, string name = "Default_DTO_Name")
