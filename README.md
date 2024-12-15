@@ -1,5 +1,8 @@
 # CrossProjectTesting
-TODO
+
+This is a testing console application project that reference 2 different projects inside witch différent `interface `/ `abstract class` with settable properties are defined, in order to test if all ancestors type (interfaces or abstract classes) are correctly reached by this source generator.
+
+This project and its entire sources codes are under the CeCill-B license:
 
 <details>
     <summary>CeCill-B</summary>
