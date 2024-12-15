@@ -1131,6 +1131,8 @@ This project and its entire sources codes are under the CeCill-C license:
 </details>
 </details>
 
+-------------------------------------------------
+
 # SetOnceProperties
 
 This is a testing console project of the previous (*SetOnceGenerator*) incremental source generator project
