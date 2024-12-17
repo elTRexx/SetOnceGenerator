@@ -115,7 +115,6 @@ namespace SetOnceGenerator
     public override int GetHashCode()
       => (FoundClass, FoundInterfaceOrAbstractProperty).GetHashCode()
       ^ GeneratorUtillities.stringHashSetComparer.GetHashCode(Usings)*4166287;
-    //=> (FoundClass, Usings, FoundInterfaceOrAbstractProperty).GetHashCode();
 
     public override bool Equals(object obj)
       => obj is FoundCandidate other && Equals(other);

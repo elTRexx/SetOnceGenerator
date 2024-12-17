@@ -113,7 +113,6 @@ namespace SetOnceGenerator
     /// if applicable using <see cref="UpdatePropertyGenericParameters(PropertyDefinition, IEnumerable{string}, IEnumerable{string})"/>,
     /// or <paramref name="propertiesDefinitions"/> if not</returns>
     public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<string>? parametersTypesNames, IEnumerable<string>? actualTypesNames)
-    //public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
     {
       if (propertiesDefinitions == null || parametersTypesNames == null || actualTypesNames == null
           || !propertiesDefinitions.Any() || !parametersTypesNames.Any() || parametersTypesNames.Count() != actualTypesNames.Count())
@@ -133,6 +132,7 @@ namespace SetOnceGenerator
       => propertiesDefinitions.UpdatePropertiesGenericParameters(
         parametersTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()),
         actualTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()));
+
     /// <summary>
     /// <see cref="UpdatePropertiesGenericParameters(IEnumerable{PropertyDefinition}, IEnumerable{string}?, IEnumerable{string}?)"/>
     /// </summary>
@@ -143,6 +143,7 @@ namespace SetOnceGenerator
     public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<string>? parametersTypesNames, IEnumerable<ITypeSymbol> actualTypes)
       => propertiesDefinitions.UpdatePropertiesGenericParameters(parametersTypesNames,
         actualTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()));
+
     /// <summary>
     /// <see cref="UpdatePropertiesGenericParameters(IEnumerable{PropertyDefinition}, IEnumerable{string}?, IEnumerable{string}?)"/>
     /// </summary>
@@ -168,13 +169,11 @@ namespace SetOnceGenerator
     /// or a new <see cref="PropertyDefinition"/> with its generic types parameters symbols updated
     /// to their actually used declared one</returns>
     public static PropertyDefinition UpdatePropertyGenericParameters(this PropertyDefinition propertyDefinition, IEnumerable<string> parametersTypesNames, IEnumerable<string> actualTypesNames)
-    //public static PropertyDefinition UpdatePropertyGenericParameters(this PropertyDefinition propertyDefinition, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
     {
       if (propertyDefinition.TypeName.GenericParametersNames == null || !propertyDefinition.TypeName.GenericParametersNames.Any())
         return propertyDefinition;
 
       string _TransformType(string typeName)
-      //ITypeSymbol _TransformType(ITypeSymbol type)
       {
         int index = parametersTypesNames.IndexOf(typeName);
         return index == -1
@@ -343,9 +342,6 @@ namespace SetOnceGenerator
       if (interfaceOrAbstractTypeSymbol.IsInterfaceType())
         contextualModifiers = string.Empty;
 
-      //if (interfaceOrAbstractTypeSymbol.IsAbstractClass() && string.IsNullOrWhiteSpace(contextualModifiers))
-      //  contextualModifiers = propertySymbol.GetContextualModifiersAsString();
-
       var propertyDefinition = propertySymbol.GetPropertyDefinition(contextualModifiers);
 
       if (interfaceOrAbstractTypeSymbol == null
@@ -391,9 +387,7 @@ namespace SetOnceGenerator
       PropertyDefinition propertyDefinition,
       HashSet<string> usings)
     {
-      if (string.IsNullOrWhiteSpace(interfaceOrAbstractName)
-        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName)
-        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName))////TTTT
+      if (string.IsNullOrWhiteSpace(interfaceOrAbstractFullName))
         return interfacesOrAbstractDefinitions;
 
       var foundInterfacesOrAbstract = interfacesOrAbstractDefinitions.Where(interfaceDef => interfaceDef.Item1.FullName == interfaceOrAbstractFullName);
@@ -405,10 +399,13 @@ namespace SetOnceGenerator
 
       if (foundInterfaceOrAbstract.Equals(default))
       {
+        if (string.IsNullOrWhiteSpace(interfaceOrAbstractName)
+          || string.IsNullOrWhiteSpace(interfaceOrAbstractNamespace))
+          return interfacesOrAbstractDefinitions;
+
         var interfaceOrAbstractDef = new InterfaceOrAbstractDefinition(
             interfaceOrAbstractDeclaredAccessibility,
             new TypeName(isAbstractClass, interfaceOrAbstractName, typeParameters),
-            //new TypeName(isAbstractClass, interfaceOrAbstractName, interfaceOrAbstractDeclaredAccessibility, string.Empty, typeParameters),
             interfaceOrAbstractNamespace);
 
         interfaceOrAbstractDef.Properties.Add(propertyDefinition);
@@ -452,7 +449,6 @@ namespace SetOnceGenerator
     /// <param name="memberDeclarationSyntax">The member syntax node from witch to return its contextual keywords modifiers as a string.</param>
     /// <returns>The string representation of the contextual keywords modifiers of <paramref name="memberDeclarationSyntax"/></returns>
     public static string GetContextualModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
-    //  => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
     {
       string contextualModifiersAsString = string.Empty;
 
@@ -482,7 +478,6 @@ namespace SetOnceGenerator
         return default;
 
       int maxSet = 0;
-      //AttributeData foundAttribute;
       foreach (var attribute in attributes!)
       {
         var attributeClass = attribute.AttributeClass;
@@ -490,13 +485,11 @@ namespace SetOnceGenerator
         if (SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetOnceAttributeType))
         {
           maxSet = 1;
-          //foundAttribute = attribute;
           break;
         }
         if (SimpleAttributeSymbolEqualityComparer.Default.Equals(attributeClass, SetNTimesAttributeType))
         {
           maxSet = attribute.GetAttributeArgument(0, 1);
-          //foundAttribute = attribute;
           break;
         }
       }
@@ -504,19 +497,12 @@ namespace SetOnceGenerator
       if (maxSet <= 0)
         return default;
 
-      //IEnumerable<ITypeSymbol>? typeParamerters = null;
-
-      //string propertyTypeName = (propertySymbol!.Type as INamedTypeSymbol)?
-      //                                .GetGenericTypeName(out _)
-      //                                ?? propertySymbol.Type.GetTypeAliasOrShortName();
-
-      string declaredAccessibility = SyntaxFacts.GetText(propertySymbol.DeclaredAccessibility);
+      string declaredAccessibility = SyntaxFacts.GetText(propertySymbol!.DeclaredAccessibility);
 
       return new PropertyDefinition(
                 propertySymbol.Name,
                 propertySymbol.Type.ToTypeName(),
                 new ModifiersNames(declaredAccessibility, contextualModifiers),
-                //propertySymbol.Type.ToTypeName(declaredAccessibility, contextualModifiers),
                 new AttributeDefinition(
                     maxSet
                     )
@@ -568,14 +554,6 @@ namespace SetOnceGenerator
         .Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName());
 
       return OtherUtilities.SequenceEqual(typeArgumentsNames, typeName.GenericParametersNames);
-
-      //for (int i = 0; i < namedTypeSymbol!.TypeArguments.Length; i++)
-      //{
-      //  if (!namedTypeSymbol.TypeArguments[i].Equals(typeName.GenericParametersNames.ElementAtOrDefault(i), SymbolEqualityComparer.Default))
-      //    return false;
-      //}
-
-      //return true;
     }
 
     /// <summary>
@@ -605,31 +583,19 @@ namespace SetOnceGenerator
     /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert</param>
     /// <returns>The corresponding simplier string friendly representation of given <paramref name="typeSymbol"/> type structured into the custom <see cref="TypeName"/> structure.</returns>
     public static TypeName ToTypeName(this ITypeSymbol typeSymbol)
-    //public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string declaredAccessibility, string contextualModifiers)
     {
       if (typeSymbol == default)
         return default;
 
       IEnumerable<ITypeSymbol>? typeParamerters = null;
 
-      //var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
-
       var name = (typeSymbol as INamedTypeSymbol)?
         .GetGenericTypeName(out typeParamerters)
         ?? typeSymbol.GetTypeAliasOrShortName();
 
-      //if (string.IsNullOrEmpty(declaredAccessibility))
-      //  declaredAccessibility = SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility);
-      ////if (string.IsNullOrEmpty(contextualModifiers))
-      ////{
-      ////  contextualModifiers = typeSymbol.
-      ////}
-
       return new TypeName(
       typeSymbol.IsAbstractClass(),
       name,
-      //declaredAccessibility,
-      //contextualModifiers,
       typeParamerters);
     }
 

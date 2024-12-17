@@ -19,23 +19,8 @@
 
       if (item1.Count() != item2.Count())
         return false;
-      T i1, i2;
-      for (int i = 0; i<item1.Count(); i++)
-      {
-        i1 = item1.ElementAt(i);
-        i2 = item2.ElementAt(i);
-        if (comparer != null)
-        {
-          if (!comparer.Equals(i1, i2))
-            return false;
-        }
-        else if (!i1?.Equals(i2) ?? true)
-          return false;
-      }
 
-
-      return true;
-      //return item1.SequenceEqual(item2, comparer);
+      return item1.SequenceEqual(item2, comparer);
     }
 
     /// <summary>

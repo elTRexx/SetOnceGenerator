@@ -78,6 +78,8 @@
 #endregion
 #endregion
 
+using SetOnceGenerator.Sources.Utilities;
+
 /// <summary>
 /// While performing some chained transform in our source generation pipeline,
 /// we are using some custom data structures to better communicate 
@@ -120,7 +122,6 @@ namespace SetOnceGenerator
     public override int GetHashCode()
       => (Accessibility, TypeName, NameSpace).GetHashCode()
       ^ _hashSetComparer.GetHashCode(Properties) * 1674319;
-    //=> (TypeName, NameSpace, Properties).GetHashCode();
 
     public override bool Equals(object obj)
       => obj is InterfaceOrAbstractDefinition other && Equals(other);
@@ -129,32 +130,33 @@ namespace SetOnceGenerator
      => Accessibility == other.Accessibility
       && TypeName.Equals(other.TypeName)
       && NameSpace == other.NameSpace
-      && _PropsEquality(other);
+      && OtherUtilities.SequenceEqual(Properties, other.Properties);
+    //&& _PropsEquality(other);
 
-    private bool _PropsEquality(InterfaceOrAbstractDefinition other)
-    {
-      if (ReferenceEquals(this, other)
-       || ReferenceEquals(Properties, other.Properties))
-        return true;
+    //private bool _PropsEquality(InterfaceOrAbstractDefinition other)
+    //{
+    //  if (ReferenceEquals(this, other)
+    //   || ReferenceEquals(Properties, other.Properties))
+    //    return true;
 
-      ///? remove or keep ?
-      //if (Properties == null && other.Properties == null)
-      //  return true;
+    //  ///? remove or keep ?
+    //  //if (Properties == null && other.Properties == null)
+    //  //  return true;
 
-      if (Properties == null || other.Properties == null)
-        return false;
+    //  if (Properties == null || other.Properties == null)
+    //    return false;
 
-      if (Properties.Count != other.Properties.Count)
-        return false;
+    //  if (Properties.Count != other.Properties.Count)
+    //    return false;
 
-      for (int i = 0; i < Properties.Count; i++)
-      {
-        if (!Properties.ElementAt(i).Equals(other.Properties.ElementAt(i)))
-          return false;
-      }
+    //  for (int i = 0; i < Properties.Count; i++)
+    //  {
+    //    if (!Properties.ElementAt(i).Equals(other.Properties.ElementAt(i)))
+    //      return false;
+    //  }
 
-      return true;
-    }
+    //  return true;
+    //}
     #endregion
   }
 }

@@ -113,7 +113,6 @@ namespace SetOnceGenerator
       if (node is PropertyDeclarationSyntax propertyDeclarationSyntax
           && propertyDeclarationSyntax.AttributeLists.Count > 0
           && node.Ancestors().OfType<TypeDeclarationSyntax>().Any())
-        //&& node.Ancestors().OfType<InterfaceDeclarationSyntax>().Any())
         return true;
       return false;
     }
@@ -241,7 +240,6 @@ namespace SetOnceGenerator
       ///Filter candidate classes to actual classes to augment
       List<(ClassCandidate, HashSet<string>)>? classes = [];
 
-      //HashSet<INamedTypeSymbol> allInterfacesAndAbstractBaseClasses;
       HashSet<INamedTypeSymbol> allFilteredInterfaces;
       ImmutableArray<ISymbol> currentInterfaceMembers;
       ImmutableArray<AttributeData> attributes;
@@ -256,10 +254,8 @@ namespace SetOnceGenerator
         isCurrentClassAdded = false;
 
         allFilteredInterfaces = classCandidate.Item1.ClassType!.GetAllFilteredImplementedInterfaces();
-        //allInterfacesAndAbstractBaseClasses = classCandidate.Item1.ClassType!.GetAllImplementedInterfacesAndExtendedAbstractClasses();
 
         foreach (var interfaceTypeSymbol in allFilteredInterfaces)
-        //foreach (var interfaceOrAbstractTypeSymbol in allInterfacesAndAbstractBaseClasses)
         {
           currentInterfaceMembers = interfaceTypeSymbol.GetMembers();
           if (!currentInterfaceMembers.Any())
@@ -284,17 +280,13 @@ namespace SetOnceGenerator
               {
                 usingDirective = propertySymbol.GetUsingDirective();
 
-                //var contextualModifiers = propertySymbol.GetContextualModifiersAsString();
-
                 usingDirectives = usingDirective == default ?
                   default
                   : new HashSet<string>([usingDirective]);
 
                 interfacesOrAbstractDefinitions.AddTuple(interfaceTypeSymbol, propertySymbol, string.Empty, usingDirectives);
 
-                if (!isCurrentClassAdded
-                  //&& !classes.Any(@class => @class.Item1.Equals(classCandidate.Item1))
-                  )
+                if (!isCurrentClassAdded)
                 {
                   indexToRemove = [];
 
@@ -335,7 +327,6 @@ namespace SetOnceGenerator
         classAccessibility = SyntaxFacts.GetText(classCandidate.Item1.ClassType.DeclaredAccessibility);
 
         currentClassToAugment = new ClassToAugment(classAccessibility, classCandidate.Item1.ClassType.ToTypeName(), classCandidate.Item1.Namespace);
-        //currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty, string.Empty), classCandidate.Item1.Namespace);
         currentClassToAugment.UsingNamespaces.UnionWith(classCandidate.Item2);
 
         augmentedInterfacesOrAbstracts = [];
@@ -344,15 +335,12 @@ namespace SetOnceGenerator
         //    .Where(interfaceDef => currentClassToAugment.Class.AllInterfaces//classCandidate.Item1.ClassType.AllInterfaces
         //                        .Any(interfaceType => interfaceType.IsSameInterface(interfaceDef.Item1)));
         allFilteredInterfaces = classCandidate.Item1.ClassType.GetAllFilteredImplementedInterfaces();
-        //allInterfacesAndAbstractBaseClasses = classCandidate.Item1.ClassType.GetAllImplementedInterfacesAndExtendedAbstractClasses();
 
         ///Doing it like old time so.
         foreach (var interfaceOrAbstractDefinition in interfacesOrAbstractDefinitions)
         {
-          //allInterfacesAndAbstractBaseClasses = currentClassToAugment.ClassType.GetAllImplementedInterfacesAndExtendedAbstractClasses();
 
           foreach (var interfaceType in allFilteredInterfaces)
-          //foreach (var interfaceOrAbstractType in allInterfacesAndAbstractBaseClasses)
           {
             if (interfaceType.IsSameInterfaceOrAbstract(interfaceOrAbstractDefinition.Item1))
             {
@@ -365,12 +353,7 @@ namespace SetOnceGenerator
               currentInterfaceOrAbstractDefinition =
                   new(
                       SyntaxFacts.GetText(interfaceType.DeclaredAccessibility),
-                      //new TypeName(interfaceOrAbstractType.IsAbstract,
-                      //                     interfaceOrAbstractDefinition.Item1.TypeName.Name,
-                      //                     SyntaxFacts.GetText(interfaceOrAbstractType.DeclaredAccessibility),
-                      //                     interfaceOrAbstractType.TypeArguments),
                       interfaceType.ToTypeName(),
-                      //interfaceType.ToTypeName(string.Empty, string.Empty),
                       interfaceOrAbstractDefinition.Item1.NameSpace,
                       interfaceOrAbstractDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceOrAbstractDefinition.Item1.TypeName.GenericParametersNames!, interfaceType.TypeArguments)
                      );
@@ -404,10 +387,7 @@ namespace SetOnceGenerator
         var alreadyPresentAbstractClassesToAugment = classesToAugments
           .Where(currentClassToAugment =>
           currentClassToAugment.TypeName.IsAbstractClass
-          //currentClassToAugment.ClassType.IsAbstract
           && currentClassToAugment.TypeName.Equals(interfaceOrAbstractDefinition.Item1.TypeName));
-        //&& currentClassToAugment.TypeName.HaveSameGenericTypeParameter(interfaceOrAbstractDefinition.Item1.TypeName));
-        //&& currentClassToAugment.ClassType.EqualsTo(interfaceOrAbstractDefinition.Item1.TypeName));
 
         if (alreadyPresentAbstractClassesToAugment?.Any() ?? false)
         {
@@ -461,7 +441,6 @@ namespace SetOnceGenerator
         string usingStatements = FormatUsingStatements(classToAugment.UsingNamespaces);
 
         string classSignature = classToAugment.TypeName.FormatClassSignature(classToAugment.Accessibility);
-        //string classSignature = classToAugment.ClassType.FormatClassSignature();
 
         string settableProperties = "";
         foreach (var interfaceOrAbstractDefinition in classToAugment.InterfacesOrAbstractsDefinitions)
@@ -483,7 +462,6 @@ namespace SetOnceGenerator
 ";
 
         context.AddSource($"{hintNamePrefix}.{classToAugment.TypeName.Name}.g.cs", augmentedClass);
-        //context.AddSource($"{hintNamePrefix}.{classToAugment.ClassType.Name}.g.cs", augmentedClass);
       }
     }
   }

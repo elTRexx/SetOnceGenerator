@@ -128,7 +128,6 @@ namespace SetOnceGenerator
         ^ GeneratorUtillities.stringHashSetComparer.GetHashCode(UsingNamespaces) * 3471899
         ^ hashSetCode * 2411033;
     }
-    //=> (Namespace, UsingNamespaces, TypeName, InterfacesOrAbstractsDefinitions).GetHashCode();
 
     public override bool Equals(object obj)
       => obj is ClassToAugment other && Equals(other);

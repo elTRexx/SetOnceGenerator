@@ -8,9 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	<Version>0.1.8</Version>
-	<PackageVersion>0.1.8</PackageVersion>
-	<PackageReleaseNotes>Corrected a bug that a settable property whose type is a generic one failed to retreive its DeclaredAccessibility.</PackageReleaseNotes>
+	<Version>0.1.9</Version>
+	<PackageVersion>0.1.9</PackageVersion>
+	<PackageReleaseNotes>Added custom equality logics on custom used data structures, to properly handle partial generically typed properties comparison.</PackageReleaseNotes>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	<PackageId>SettableOnceProperty</PackageId>
 	<PackageReadmeFile>readme.md</PackageReadmeFile>

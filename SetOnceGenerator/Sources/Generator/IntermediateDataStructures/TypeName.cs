@@ -99,31 +99,21 @@ namespace SetOnceGenerator
 
     public string Name { get; init; }
 
-    //public string DeclaredAccessibility { get; init; }
-    //public string ContextualModifiers { get; init; }
-
-    //public ModifiersNames Modifiers { get; init; }
-
     public IEnumerable<string> GenericParametersNames { get; init; }
-    //public IEnumerable<ITypeSymbol>? GenericParameters { get; init; }
 
     private readonly string _fullName;
     public string FullName => _fullName;
 
-    public TypeName(bool isAbstractClass, string name, /*ModifiersNames modifiersNames,*/ IEnumerable<string>? genericParametersNames)
+    public TypeName(bool isAbstractClass, string name, IEnumerable<string>? genericParametersNames)
     {
       IsAbstractClass = isAbstractClass;
       Name = name;
-      //Modifiers = modifiersNames;
       GenericParametersNames = genericParametersNames ?? [];
       _fullName = name.FormatGenericTypeName(genericParametersNames);
     }
-    public TypeName(bool isAbstractClass, string name, /*ModifiersNames modifiersNames,*/ IEnumerable<ITypeSymbol>? genericParameters)
+    public TypeName(bool isAbstractClass, string name, IEnumerable<ITypeSymbol>? genericParameters)
       : this(isAbstractClass, name, genericParameters?.Select(type => type.FormatGenericTypeAliasOrShortName()))
     { }
-    //public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string contextualModifiers, IEnumerable<ITypeSymbol>? genericParameters)
-    //  : this(isAbstractClass, name, new ModifiersNames(declaredAccessibility, contextualModifiers), genericParameters)
-    //{ }
 
     #region Equality
     public override bool Equals(object obj)
@@ -133,13 +123,10 @@ namespace SetOnceGenerator
      => FullName == other.FullName
       && IsAbstractClass == other.IsAbstractClass
       && OtherUtilities.SequenceEqual(GenericParametersNames, other.GenericParametersNames);
-    //&& GenericParameters == default && other.GenericParameters == default
-    //  || (GenericParameters?.SequenceEqual(other.GenericParameters, SymbolEqualityComparer.Default) ?? false);
 
     public override int GetHashCode()
       => (IsAbstractClass, Name).GetHashCode()
       ^ (GenericParametersNames?.GetHashCodeOfElements() ?? 0) * 30293;
-    //=> (IsAbstractClass, Name, GenericParameters).GetHashCode(); 
     #endregion
   }
 }

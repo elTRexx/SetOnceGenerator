@@ -75,15 +75,11 @@ using CrossProjectTesting.Sources.Interfaces;
 
 namespace CrossProjectTesting.Sources
 {
-  internal class BoolDTO : ABoolDTO//IBoolDTO
+  internal class BoolDTO : ABoolDTO
   {
     public BoolDTO(bool myBool)
     {
       ((IBoolDTO)this).MyBool = myBool;
     }
-
-    //public int ID { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    //public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    //public bool MyBool { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
   }
 }
