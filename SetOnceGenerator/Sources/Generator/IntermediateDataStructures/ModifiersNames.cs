@@ -78,68 +78,28 @@
 #endregion
 #endregion
 
-using Microsoft.CodeAnalysis;
-using SetOnceGenerator.Sources.Utilities;
-
-/// <summary>
-/// While performing some chained transform in our source generation pipeline,
-/// we are using some custom data structures to better communicate 
-/// between such transformations
-/// </summary>
 namespace SetOnceGenerator
 {
-  /// <summary>
-  /// Simple struct to store a Type's name as a <see cref="string"/>,
-  /// its potential generic types parameters, it accessibility and contextual modifiers
-  /// Include also a flag telling if the corresponding Type is an abstract class or not. 
-  /// </summary>
-  public readonly struct TypeName : IEquatable<TypeName>
+  public readonly struct ModifiersNames : IEquatable<ModifiersNames>
   {
-    public bool IsAbstractClass { get; init; }
+    public string Accessibility { get; init; }
+    public string ContextualKeywords { get; init; }
 
-    public string Name { get; init; }
-
-    //public string DeclaredAccessibility { get; init; }
-    //public string ContextualModifiers { get; init; }
-
-    //public ModifiersNames Modifiers { get; init; }
-
-    public IEnumerable<string> GenericParametersNames { get; init; }
-    //public IEnumerable<ITypeSymbol>? GenericParameters { get; init; }
-
-    private readonly string _fullName;
-    public string FullName => _fullName;
-
-    public TypeName(bool isAbstractClass, string name, /*ModifiersNames modifiersNames,*/ IEnumerable<string>? genericParametersNames)
+    public ModifiersNames(string accessibility, string contextualKeywords)
     {
-      IsAbstractClass = isAbstractClass;
-      Name = name;
-      //Modifiers = modifiersNames;
-      GenericParametersNames = genericParametersNames ?? [];
-      _fullName = name.FormatGenericTypeName(genericParametersNames);
+      Accessibility = accessibility;
+      ContextualKeywords = contextualKeywords;
     }
-    public TypeName(bool isAbstractClass, string name, /*ModifiersNames modifiersNames,*/ IEnumerable<ITypeSymbol>? genericParameters)
-      : this(isAbstractClass, name, genericParameters?.Select(type => type.FormatGenericTypeAliasOrShortName()))
-    { }
-    //public TypeName(bool isAbstractClass, string name, string declaredAccessibility, string contextualModifiers, IEnumerable<ITypeSymbol>? genericParameters)
-    //  : this(isAbstractClass, name, new ModifiersNames(declaredAccessibility, contextualModifiers), genericParameters)
-    //{ }
 
     #region Equality
-    public override bool Equals(object obj)
-      => obj is TypeName other && Equals(other);
-
-    public bool Equals(TypeName other)
-     => FullName == other.FullName
-      && IsAbstractClass == other.IsAbstractClass
-      && OtherUtilities.SequenceEqual(GenericParametersNames, other.GenericParametersNames);
-    //&& GenericParameters == default && other.GenericParameters == default
-    //  || (GenericParameters?.SequenceEqual(other.GenericParameters, SymbolEqualityComparer.Default) ?? false);
-
     public override int GetHashCode()
-      => (IsAbstractClass, Name).GetHashCode()
-      ^ (GenericParametersNames?.GetHashCodeOfElements() ?? 0) * 30293;
-    //=> (IsAbstractClass, Name, GenericParameters).GetHashCode(); 
+      => (Accessibility, ContextualKeywords).GetHashCode();
+
+    public override bool Equals(object obj)
+      => obj is ModifiersNames other && Equals(other);
+
+    public bool Equals(ModifiersNames other)
+      => Accessibility == other.Accessibility && ContextualKeywords == other.ContextualKeywords;
     #endregion
   }
 }

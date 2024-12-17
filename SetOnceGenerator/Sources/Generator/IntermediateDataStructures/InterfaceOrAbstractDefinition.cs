@@ -93,6 +93,8 @@ namespace SetOnceGenerator
   /// </summary>
   public readonly struct InterfaceOrAbstractDefinition : IEquatable<InterfaceOrAbstractDefinition>
   {
+    public string Accessibility { get; init; }
+
     public TypeName TypeName { get; init; }
 
     public bool IsAbstractClass => TypeName.IsAbstractClass;
@@ -102,8 +104,11 @@ namespace SetOnceGenerator
 
     public HashSet<PropertyDefinition> Properties { get; init; }
 
-    public InterfaceOrAbstractDefinition(TypeName typeName, string @namespace, IEnumerable<PropertyDefinition>? propertiesDefinitions = null)
+    private static readonly IEqualityComparer<HashSet<PropertyDefinition>> _hashSetComparer = HashSet<PropertyDefinition>.CreateSetComparer();
+
+    public InterfaceOrAbstractDefinition(string accessibility, TypeName typeName, string @namespace, IEnumerable<PropertyDefinition>? propertiesDefinitions = null)
     {
+      Accessibility = accessibility;
       TypeName = typeName;
       NameSpace = @namespace;
       Properties = propertiesDefinitions == null
@@ -111,8 +116,18 @@ namespace SetOnceGenerator
           : new HashSet<PropertyDefinition>(propertiesDefinitions);
     }
 
+    #region Equality
+    public override int GetHashCode()
+      => (Accessibility, TypeName, NameSpace).GetHashCode()
+      ^ _hashSetComparer.GetHashCode(Properties) * 1674319;
+    //=> (TypeName, NameSpace, Properties).GetHashCode();
+
+    public override bool Equals(object obj)
+      => obj is InterfaceOrAbstractDefinition other && Equals(other);
+
     public bool Equals(InterfaceOrAbstractDefinition other)
-     => TypeName.Equals(other.TypeName)
+     => Accessibility == other.Accessibility
+      && TypeName.Equals(other.TypeName)
       && NameSpace == other.NameSpace
       && _PropsEquality(other);
 
@@ -140,5 +155,6 @@ namespace SetOnceGenerator
 
       return true;
     }
+    #endregion
   }
 }

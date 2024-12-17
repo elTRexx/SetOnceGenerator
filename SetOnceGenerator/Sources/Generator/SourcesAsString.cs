@@ -123,7 +123,7 @@ namespace SetOnceGenerator
         string.Empty : interfaceOrAbstractDefinition.FullName+'.';
 
       string propertySignature = interfaceOrAbstractDefinition.IsAbstractClass ?
-        $"{propertyDefinition.TypeName.DeclaredAccessibility} {propertyDefinition.TypeName.ContextualModifiers} "
+        $"{propertyDefinition.Modifiers.Accessibility} {propertyDefinition.Modifiers.ContextualKeywords} "
         : string.Empty;
 
       string propertyCode = $@"

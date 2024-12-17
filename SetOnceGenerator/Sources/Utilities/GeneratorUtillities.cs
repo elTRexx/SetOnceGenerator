@@ -81,6 +81,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using SetOnceGenerator.Sources.Utilities;
 using System.Collections.Immutable;
 using static SetOnceGenerator.Pipeline;
 
@@ -96,60 +97,99 @@ namespace SetOnceGenerator
 
     public const string HidePartialPropertyConstant = "HIDE_GENERATED_PARTIAL_PROPERTIES";
 
+    public static readonly IEqualityComparer<HashSet<string>> stringHashSetComparer = HashSet<string>.CreateSetComparer();
+
     /// <summary>
     /// Update a <see cref="IEnumerable{PropertyDefinition}"/> collection in order to 
-    /// transform the formally defined generic types parameters as <see cref="IEnumerable{ITypeSymbol}"/>
-    /// into their actually declared types arguments as <see cref="IEnumerable{ITypeSymbol}"/>
-    /// using <see cref="UpdatePropertyGenericParameters(PropertyDefinition, IEnumerable{ITypeSymbol}, IEnumerable{ITypeSymbol})"/>
+    /// transform the formally defined generic types parameters as <see cref="IEnumerable{String}"/>
+    /// into their actually declared types arguments as <see cref="IEnumerable{String}"/>
+    /// using <see cref="UpdatePropertyGenericParameters(PropertyDefinition, IEnumerable{string}, IEnumerable{string})"/>
     /// </summary>
-    /// <param name="propertiesDefinitions">The collection of porperties definitions to be updated</param>
-    /// <param name="parametersTypes">The collection of formally defined generic types parameters symbols</param>
-    /// <param name="actualTypes">The collection of actually declared generic types arguments symbols</param>
+    /// <param name="propertiesDefinitions">The collection of <see cref="PropertyDefinition"/> to update their potential formals generic types parameters into their actually "used" ones</param>
+    /// <param name="parametersTypesNames">The collection of formally defined generic types parameters names</param>
+    /// <param name="actualTypesNames">The collection of actually declared generic types arguments names</param>
     /// <returns>a collection of new <see cref="PropertyDefinition"/> copies of <paramref name="propertiesDefinitions"/> 
     /// with their generic types parameters names updated to their actually used declared one 
     /// if applicable using <see cref="UpdatePropertyGenericParameters(PropertyDefinition, IEnumerable{string}, IEnumerable{string})"/>,
     /// or <paramref name="propertiesDefinitions"/> if not</returns>
-    public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
+    public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<string>? parametersTypesNames, IEnumerable<string>? actualTypesNames)
+    //public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
     {
-      if (propertiesDefinitions == null || parametersTypes == null || actualTypes == null
-          || !propertiesDefinitions.Any() || !parametersTypes.Any() || parametersTypes.Count() != actualTypes.Count())
+      if (propertiesDefinitions == null || parametersTypesNames == null || actualTypesNames == null
+          || !propertiesDefinitions.Any() || !parametersTypesNames.Any() || parametersTypesNames.Count() != actualTypesNames.Count())
         return propertiesDefinitions;
 
-      return propertiesDefinitions.Select(propertyDef => propertyDef.UpdatePropertyGenericParameters(parametersTypes, actualTypes));
+      return propertiesDefinitions.Select(propertyDef => propertyDef.UpdatePropertyGenericParameters(parametersTypesNames, actualTypesNames));
     }
 
     /// <summary>
-    /// Update a <see cref="PropertyDefinition"/> in order to transform 
-    /// its formally defined generic types parameters as <see cref="IEnumerable{ITypeSymbol}"/>
-    /// into their actually declared types arguments as <see cref="IEnumerable{ITypeSymbol}"/>
+    /// <see cref="UpdatePropertiesGenericParameters(IEnumerable{PropertyDefinition}, IEnumerable{string}?, IEnumerable{string}?)"/>
     /// </summary>
-    /// <param name="propertyDefinition">The property definition to be updated</param>
-    /// <param name="parametersTypes">The collection of formally defined generic types parameters symbols</param>
-    /// <param name="actualTypes">The collection of actually declared generic types arguments symbols</param>
+    /// <param name="propertiesDefinitions">The collection of <see cref="PropertyDefinition"/> to update their potential formals generic types parameters into their actually declared ones</param>
+    /// <param name="parametersTypes">The formal type parameters symbols to update using their corresponding counter part in <paramref name="actualTypes"/></param>
+    /// <param name="actualTypes">The actual type parameters symbols that will substitute those given in <paramref name="parametersTypes"/></param>
+    /// <returns>Given <paramref name="propertiesDefinitions"/> whose formals types parameters are updated using their actuals ones.</returns>
+    public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
+      => propertiesDefinitions.UpdatePropertiesGenericParameters(
+        parametersTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()),
+        actualTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()));
+    /// <summary>
+    /// <see cref="UpdatePropertiesGenericParameters(IEnumerable{PropertyDefinition}, IEnumerable{string}?, IEnumerable{string}?)"/>
+    /// </summary>
+    /// <param name="propertiesDefinitions">The collection of <see cref="PropertyDefinition"/> to update their potential formals generic types parameters into their actually declared ones</param>
+    /// <param name="parametersTypesNames">The collection of formally defined generic types parameters names</param>
+    /// <param name="actualTypes">The actual type parameters symbols that will substitute those given in <paramref name="parametersTypes"/></param>
+    /// <returns>Given <paramref name="propertiesDefinitions"/> whose formals types parameters are updated using their actuals ones.</returns>
+    public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<string>? parametersTypesNames, IEnumerable<ITypeSymbol> actualTypes)
+      => propertiesDefinitions.UpdatePropertiesGenericParameters(parametersTypesNames,
+        actualTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()));
+    /// <summary>
+    /// <see cref="UpdatePropertiesGenericParameters(IEnumerable{PropertyDefinition}, IEnumerable{string}?, IEnumerable{string}?)"/>
+    /// </summary>
+    /// <param name="propertiesDefinitions">The collection of <see cref="PropertyDefinition"/> to update their potential formals generic types parameters into their actually declared ones</param>
+    /// <param name="parametersTypes">The formal type parameters symbols to update using their corresponding counter part in <paramref name="actualTypes"/></param>
+    /// <param name="actualTypesNames">The collection of actually declared generic types arguments names</param>
+    /// <returns>Given <paramref name="propertiesDefinitions"/> whose formals types parameters are updated using their actuals ones.</returns>
+    public static IEnumerable<PropertyDefinition>? UpdatePropertiesGenericParameters(this IEnumerable<PropertyDefinition> propertiesDefinitions, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<string>? actualTypesNames)
+      => propertiesDefinitions.UpdatePropertiesGenericParameters(
+        parametersTypes?.Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName()),
+        actualTypesNames);
+
+    /// <summary>
+    /// Update a <see cref="PropertyDefinition"/> in order to transform 
+    /// its formally defined generic types parameters as <see cref="IEnumerable{string}"/>
+    /// into their actually declared types arguments as <see cref="IEnumerable{string}"
+    /// (respecting the same order)/>
+    /// </summary>
+    /// <param name="propertyDefinition">The property definition to update their potential formals generic types parameters into their actually declared ones</param>
+    /// <param name="parametersTypesNames">The collection of formally defined generic types parameters names</param>
+    /// <param name="actualTypesNames">The collection of actually declared generic types arguments names</param>
     /// <returns><paramref name="propertyDefinition"/> if this transform is not applicable
     /// or a new <see cref="PropertyDefinition"/> with its generic types parameters symbols updated
     /// to their actually used declared one</returns>
-    public static PropertyDefinition UpdatePropertyGenericParameters(this PropertyDefinition propertyDefinition, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
+    public static PropertyDefinition UpdatePropertyGenericParameters(this PropertyDefinition propertyDefinition, IEnumerable<string> parametersTypesNames, IEnumerable<string> actualTypesNames)
+    //public static PropertyDefinition UpdatePropertyGenericParameters(this PropertyDefinition propertyDefinition, IEnumerable<ITypeSymbol> parametersTypes, IEnumerable<ITypeSymbol> actualTypes)
     {
-      if (propertyDefinition.TypeName.GenericParameters == null || !propertyDefinition.TypeName.GenericParameters.Any())
+      if (propertyDefinition.TypeName.GenericParametersNames == null || !propertyDefinition.TypeName.GenericParametersNames.Any())
         return propertyDefinition;
 
-      ITypeSymbol _TransformType(ITypeSymbol type)
+      string _TransformType(string typeName)
+      //ITypeSymbol _TransformType(ITypeSymbol type)
       {
-        int index = parametersTypes.IndexOf(type);
+        int index = parametersTypesNames.IndexOf(typeName);
         return index == -1
-            ? type
-            : actualTypes.ElementAt(index);
+            ? typeName
+            : actualTypesNames.ElementAt(index);
       }
 
-      var transformedParamerters = propertyDefinition.TypeName.GenericParameters!.Select(_TransformType);
+      var transformedParamerters = propertyDefinition.TypeName.GenericParametersNames!.Select(_TransformType);
 
       return new PropertyDefinition(propertyDefinition.Name,
                                     new TypeName(propertyDefinition.TypeName.IsAbstractClass,
                                                   propertyDefinition.TypeName.Name,
-                                                  propertyDefinition.TypeName.DeclaredAccessibility,
-                                                  propertyDefinition.TypeName.ContextualModifiers,
                                                   transformedParamerters),
+                                    new ModifiersNames(propertyDefinition.Modifiers.Accessibility,
+                                                  propertyDefinition.Modifiers.ContextualKeywords),
                                     propertyDefinition.AttributeArgument
                                     );
     }
@@ -182,7 +222,7 @@ namespace SetOnceGenerator
     /// false else</returns>
     public static bool IsSameInterfaceOrAbstract(this INamedTypeSymbol interfaceOrAbstractType, InterfaceOrAbstractDefinition interfaceOrAbstractDefinition)
         => interfaceOrAbstractType.Name == interfaceOrAbstractDefinition.TypeName.Name
-        && interfaceOrAbstractType.TypeParameters.Length == (interfaceOrAbstractDefinition.TypeName.GenericParameters?.Count() ?? 0)
+        && interfaceOrAbstractType.TypeParameters.Length == (interfaceOrAbstractDefinition.TypeName.GenericParametersNames?.Count() ?? 0)
         && ((interfaceOrAbstractType.IsAbstractClass() && interfaceOrAbstractDefinition.IsAbstractClass)
         || (interfaceOrAbstractType.IsInterfaceType() && !interfaceOrAbstractDefinition.IsAbstractClass));
 
@@ -258,14 +298,14 @@ namespace SetOnceGenerator
 
     /// <summary>
     /// Try to add an <see cref="(INamedTypeSymbol, PropertyDefinition)"/> tuple
-    /// and its corresponding <see cref="IEnumerable{string}"/> using statements declarations
-    /// to a collection of <see cref="HashSet{(InterfaceOrAbstractDefinition, IEnumerable{string})}"/>
+    /// and its corresponding <see cref="HashSet{string}"/> using statements declarations
+    /// to a collection of <see cref="HashSet{(InterfaceOrAbstractDefinition, HashSet{string})}"/>
     /// </summary>
     /// <param name="interfacesOrAbstractDefinitions">The collection in witch to try adding <paramref name="interfaceOrAbstractPropertyDef"/> and <paramref name="usings"/></param>
     /// <param name="interfaceOrAbstractPropertyDef">The tuple of the interface or the abstract class type symbol and its property definition trying to be transformed as a <see cref="InterfaceOrAbstractDefinition"/> 
     /// and then added along side <paramref name="usings"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
     /// <param name="usings">the collection of using statements trying to be added along side <paramref name="interfaceOrAbstractPropertyDef"/> in <paramref name="interfacesOrAbstractDefinitions"/></param>
-    /// <returns><paramref name="interfacesOrAbstractDefinitions"/> augmented with a new <see cref="(InterfaceOrAbstractDefinition, IEnumerable{string})"/> 
+    /// <returns><paramref name="interfacesOrAbstractDefinitions"/> augmented with a new <see cref="(InterfaceOrAbstractDefinition, HashSet{string})"/> 
     /// if suceed or unchanged else</returns>
     public static HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> AddTuple
       (this HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> interfacesOrAbstractDefinitions,
@@ -353,7 +393,7 @@ namespace SetOnceGenerator
     {
       if (string.IsNullOrWhiteSpace(interfaceOrAbstractName)
         ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName)
-        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName))
+        ||string.IsNullOrWhiteSpace(interfaceOrAbstractFullName))////TTTT
         return interfacesOrAbstractDefinitions;
 
       var foundInterfacesOrAbstract = interfacesOrAbstractDefinitions.Where(interfaceDef => interfaceDef.Item1.FullName == interfaceOrAbstractFullName);
@@ -366,7 +406,9 @@ namespace SetOnceGenerator
       if (foundInterfaceOrAbstract.Equals(default))
       {
         var interfaceOrAbstractDef = new InterfaceOrAbstractDefinition(
-            new TypeName(isAbstractClass, interfaceOrAbstractName, interfaceOrAbstractDeclaredAccessibility, string.Empty, typeParameters),
+            interfaceOrAbstractDeclaredAccessibility,
+            new TypeName(isAbstractClass, interfaceOrAbstractName, typeParameters),
+            //new TypeName(isAbstractClass, interfaceOrAbstractName, interfaceOrAbstractDeclaredAccessibility, string.Empty, typeParameters),
             interfaceOrAbstractNamespace);
 
         interfaceOrAbstractDef.Properties.Add(propertyDefinition);
@@ -403,6 +445,12 @@ namespace SetOnceGenerator
     //  return contextualModifiersAsString;
     //}
 
+    /// <summary>
+    /// Get the <see cref="MemberDeclarationSyntax.Modifiers"/> of the <paramref name="memberDeclarationSyntax"/>
+    /// and return those witch correspond to contextual keywords as a string
+    /// </summary>
+    /// <param name="memberDeclarationSyntax">The member syntax node from witch to return its contextual keywords modifiers as a string.</param>
+    /// <returns>The string representation of the contextual keywords modifiers of <paramref name="memberDeclarationSyntax"/></returns>
     public static string GetContextualModifiersAsString(this MemberDeclarationSyntax memberDeclarationSyntax)
     //  => memberDeclarationSyntax?.Modifiers.ToString() ?? string.Empty;
     {
@@ -420,11 +468,12 @@ namespace SetOnceGenerator
     }
 
     /// <summary>
-    /// Given a <see cref="IPropertySymbol"/> <paramref name="propertySymbol"/>,
+    /// Given a <see cref="IPropertySymbol"/> <paramref name="propertySymbol"/> and its contextual keywords modifiers,
     /// create and return a corresponding <see cref="PropertyDefinition"/> structured data.
     /// </summary>
     /// <param name="propertySymbol">The compilation symbol of a property to be returned structure as a <see cref="PropertyDefinition"/></param>
-    /// <returns>A structured <see cref="PropertyDefinition"/> data corresponding given <paramref name="propertySymbol"/> parameter.</returns>
+    /// <param name="contextualModifiers">The already formated as a string contextual keywords modifiers of <paramref name="propertySymbol"/></param>
+    /// <returns>A structured <see cref="PropertyDefinition"/> data corresponding given <paramref name="propertySymbol"/> and <paramref name="contextualModifiers"/> parameters.</returns>
     public static PropertyDefinition? GetPropertyDefinition(this IPropertySymbol propertySymbol, string contextualModifiers)
     {
       var attributes = propertySymbol?.GetAttributes();
@@ -465,7 +514,9 @@ namespace SetOnceGenerator
 
       return new PropertyDefinition(
                 propertySymbol.Name,
-                propertySymbol.Type.ToTypeName(declaredAccessibility, contextualModifiers),
+                propertySymbol.Type.ToTypeName(),
+                new ModifiersNames(declaredAccessibility, contextualModifiers),
+                //propertySymbol.Type.ToTypeName(declaredAccessibility, contextualModifiers),
                 new AttributeDefinition(
                     maxSet
                     )
@@ -490,7 +541,7 @@ namespace SetOnceGenerator
     /// </summary>
     /// <param name="namedTypeSymbol">The first type to check equality against <paramref name="typeName"/>.</param>
     /// <param name="typeName">The second type to check equality against <paramref name="namedTypeSymbol"/>.</param>
-    /// <returns>True if both, non null, type have the same name and, eventually, the same type parameters if they both are generic types.</returns>
+    /// <returns>True if both, non null, type have the same name and, eventually, the same type parameters names if they both are generic types.</returns>
     public static bool EqualsTo(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
     {
       if (namedTypeSymbol == default
@@ -503,53 +554,58 @@ namespace SetOnceGenerator
 
     /// <summary>
     /// Given a <see cref="INamedTypeSymbol"/> type and a <see cref="TypeName"/>, check if for both of them, their corresponding
-    /// type parameters collection are equals.
+    /// type parameters names collection are equals.
     /// </summary>
-    /// <param name="namedTypeSymbol">The first type to check its <see cref="INamedTypeSymbol.TypeParameters"/> against <paramref name="typeName"/>.<see cref="TypeName.GenericParameters"/> ones.</param>
-    /// <param name="typeName">The second type to check its <see cref="TypeName.GenericParameters"/> against <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"/> ones.</param>
-    /// <returns>True if each <see cref="ITypeSymbol"/> of <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"> are equals, in same order of those from <paramref name="typeName"/>.<see cref="TypeName.GenericParameters"/>.</returns>
+    /// <param name="namedTypeSymbol">The first type to check its <see cref="INamedTypeSymbol.TypeParameters"/> against <paramref name="typeName"/>.<see cref="TypeName.GenericParametersNames"/> ones.</param>
+    /// <param name="typeName">The second type to check its <see cref="TypeName.GenericParametersNames"/> against <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"/> ones.</param>
+    /// <returns>True if each <see cref="ITypeSymbol"/> of <paramref name="namedTypeSymbol"/>.<see cref="INamedTypeSymbol.TypeParameters"> formated as string using <see cref="ToStringUtilities.FormatGenericTypeAliasOrShortName(ITypeSymbol)"/>are equals, in same order of those from <paramref name="typeName"/>.<see cref="TypeName.GenericParametersNames"/>.</returns>
     public static bool HaveSameGenericTypeParameter(this INamedTypeSymbol namedTypeSymbol, TypeName typeName)
     {
-      if ((namedTypeSymbol?.TypeArguments.Length ?? -1) != (typeName.GenericParameters?.Count() ?? -2))
+      if ((namedTypeSymbol?.TypeArguments.Length ?? -1) != (typeName.GenericParametersNames?.Count() ?? -2))
         return false;
 
-      for (int i = 0; i < namedTypeSymbol!.TypeArguments.Length; i++)
-      {
-        if (!namedTypeSymbol.TypeArguments[i].Equals(typeName.GenericParameters.ElementAtOrDefault(i), SymbolEqualityComparer.Default))
-          return false;
-      }
+      var typeArgumentsNames = namedTypeSymbol!.TypeArguments
+        .Select(typeSymbol => typeSymbol.FormatGenericTypeAliasOrShortName());
 
-      return true;
+      return OtherUtilities.SequenceEqual(typeArgumentsNames, typeName.GenericParametersNames);
+
+      //for (int i = 0; i < namedTypeSymbol!.TypeArguments.Length; i++)
+      //{
+      //  if (!namedTypeSymbol.TypeArguments[i].Equals(typeName.GenericParametersNames.ElementAtOrDefault(i), SymbolEqualityComparer.Default))
+      //    return false;
+      //}
+
+      //return true;
     }
 
     /// <summary>
-    /// Check if two given <see cref="TypeName"/> have the same generic types parameters collection.
+    /// Check if two given <see cref="TypeName"/> have the same generic types parameters names collection.
     /// </summary>
     /// <param name="typeName1">The first type discribed via the custom <see cref="TypeName"/> structure.</param>
     /// <param name="typeName2">The second type discribed via the custom <see cref="TypeName"/> structure.</param>
-    /// <returns>True if each <see cref="ITypeSymbol"/> of <paramref name="typeName1"/>.<see cref="TypeName.GenericParameters"> are equals, in same order of those from <paramref name="typeName2"/>.<see cref="TypeName.GenericParameters"/>.</returns>
+    /// <returns>True if each <see cref="string"/> of <paramref name="typeName1"/>.<see cref="TypeName.GenericParametersNames"> are equals, in same order of those from <paramref name="typeName2"/>.<see cref="TypeName.GenericParametersNames"/>.</returns>
     public static bool HaveSameGenericTypeParameter(this TypeName typeName1, TypeName typeName2)
-    {
-      if ((typeName1.GenericParameters?.Count() ?? 0) != (typeName2.GenericParameters?.Count() ?? 0))
-        return false;
+      => OtherUtilities.SequenceEqual(typeName1.GenericParametersNames, typeName2.GenericParametersNames);
+    //{
+    //  if ((typeName1.GenericParametersNames?.Count() ?? 0) != (typeName2.GenericParametersNames?.Count() ?? 0))
+    //    return false;
 
-      for (int i = 0; i < typeName1!.GenericParameters?.Count(); i++)
-      {
-        if (!typeName1.GenericParameters.ElementAtOrDefault(i)?.Equals(typeName2.GenericParameters.ElementAtOrDefault(i), SymbolEqualityComparer.Default) ?? true)
-          return false;
-      }
+    //  for (int i = 0; i < typeName1!.GenericParametersNames?.Count(); i++)
+    //  {
+    //    if (!typeName1.GenericParametersNames.ElementAtOrDefault(i)?.Equals(typeName2.GenericParametersNames.ElementAtOrDefault(i), SymbolEqualityComparer.Default) ?? true)
+    //      return false;
+    //  }
 
-      return true;
-    }
+    //  return true;
+    //}
 
     /// <summary>
     /// Convert an <see cref="ITypeSymbol"/> into its corresponding simplier custom <see cref="TypeName"/> struture
     /// </summary>
     /// <param name="typeSymbol">The <see cref="ITypeSymbol"/> to convert</param>
-    /// <param name="declaredAccessibility">The declared accessibility of the <paramref name="typeSymbol"/> to convert</param>
-    /// <param name="contextualModifiers">A string representation of the contextual modifiers of the type to be converted as <see cref="TypeName"/>.</param>
     /// <returns>The corresponding simplier string friendly representation of given <paramref name="typeSymbol"/> type structured into the custom <see cref="TypeName"/> structure.</returns>
-    public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string declaredAccessibility, string contextualModifiers)
+    public static TypeName ToTypeName(this ITypeSymbol typeSymbol)
+    //public static TypeName ToTypeName(this ITypeSymbol typeSymbol, string declaredAccessibility, string contextualModifiers)
     {
       if (typeSymbol == default)
         return default;
@@ -562,18 +618,18 @@ namespace SetOnceGenerator
         .GetGenericTypeName(out typeParamerters)
         ?? typeSymbol.GetTypeAliasOrShortName();
 
-      if (string.IsNullOrEmpty(declaredAccessibility))
-        declaredAccessibility = SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility);
-      //if (string.IsNullOrEmpty(contextualModifiers))
-      //{
-      //  contextualModifiers = typeSymbol.
-      //}
+      //if (string.IsNullOrEmpty(declaredAccessibility))
+      //  declaredAccessibility = SyntaxFacts.GetText(typeSymbol.DeclaredAccessibility);
+      ////if (string.IsNullOrEmpty(contextualModifiers))
+      ////{
+      ////  contextualModifiers = typeSymbol.
+      ////}
 
       return new TypeName(
       typeSymbol.IsAbstractClass(),
       name,
-      declaredAccessibility,
-      contextualModifiers,
+      //declaredAccessibility,
+      //contextualModifiers,
       typeParamerters);
     }
 

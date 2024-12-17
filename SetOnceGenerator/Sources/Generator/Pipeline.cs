@@ -325,13 +325,17 @@ namespace SetOnceGenerator
       InterfaceOrAbstractDefinition currentInterfaceOrAbstractDefinition;
       HashSet<(InterfaceOrAbstractDefinition, HashSet<string>)> augmentedInterfacesOrAbstracts = [];
       ClassToAugment currentClassToAugment;
+      string? classAccessibility;
 
       foreach (var classCandidate in classes)
       {
         if (classCandidate.Item1.ClassType == null)
           continue;
 
-        currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty, string.Empty), classCandidate.Item1.Namespace);
+        classAccessibility = SyntaxFacts.GetText(classCandidate.Item1.ClassType.DeclaredAccessibility);
+
+        currentClassToAugment = new ClassToAugment(classAccessibility, classCandidate.Item1.ClassType.ToTypeName(), classCandidate.Item1.Namespace);
+        //currentClassToAugment = new ClassToAugment(classCandidate.Item1.ClassType.ToTypeName(string.Empty, string.Empty), classCandidate.Item1.Namespace);
         currentClassToAugment.UsingNamespaces.UnionWith(classCandidate.Item2);
 
         augmentedInterfacesOrAbstracts = [];
@@ -360,13 +364,15 @@ namespace SetOnceGenerator
 
               currentInterfaceOrAbstractDefinition =
                   new(
+                      SyntaxFacts.GetText(interfaceType.DeclaredAccessibility),
                       //new TypeName(interfaceOrAbstractType.IsAbstract,
                       //                     interfaceOrAbstractDefinition.Item1.TypeName.Name,
                       //                     SyntaxFacts.GetText(interfaceOrAbstractType.DeclaredAccessibility),
                       //                     interfaceOrAbstractType.TypeArguments),
-                      interfaceType.ToTypeName(string.Empty, string.Empty),
+                      interfaceType.ToTypeName(),
+                      //interfaceType.ToTypeName(string.Empty, string.Empty),
                       interfaceOrAbstractDefinition.Item1.NameSpace,
-                      interfaceOrAbstractDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceOrAbstractDefinition.Item1.TypeName.GenericParameters!, interfaceType.TypeArguments)
+                      interfaceOrAbstractDefinition.Item1.Properties.UpdatePropertiesGenericParameters(interfaceOrAbstractDefinition.Item1.TypeName.GenericParametersNames!, interfaceType.TypeArguments)
                      );
 
               augmentedInterfacesOrAbstracts.Add((currentInterfaceOrAbstractDefinition, interfaceOrAbstractDefinition.Item2));
@@ -399,8 +405,8 @@ namespace SetOnceGenerator
           .Where(currentClassToAugment =>
           currentClassToAugment.TypeName.IsAbstractClass
           //currentClassToAugment.ClassType.IsAbstract
-          && currentClassToAugment.TypeName.Equals(interfaceOrAbstractDefinition.Item1.TypeName)
-          && currentClassToAugment.TypeName.HaveSameGenericTypeParameter(interfaceOrAbstractDefinition.Item1.TypeName));
+          && currentClassToAugment.TypeName.Equals(interfaceOrAbstractDefinition.Item1.TypeName));
+        //&& currentClassToAugment.TypeName.HaveSameGenericTypeParameter(interfaceOrAbstractDefinition.Item1.TypeName));
         //&& currentClassToAugment.ClassType.EqualsTo(interfaceOrAbstractDefinition.Item1.TypeName));
 
         if (alreadyPresentAbstractClassesToAugment?.Any() ?? false)
@@ -417,7 +423,8 @@ namespace SetOnceGenerator
         }
 
         classesToAugments.Add(
-          new ClassToAugment(interfaceOrAbstractDefinition.Item1.TypeName,
+          new ClassToAugment(interfaceOrAbstractDefinition.Item1.Accessibility,
+          interfaceOrAbstractDefinition.Item1.TypeName,
           interfaceOrAbstractDefinition.Item1.NameSpace,
           interfaceOrAbstractDefinition.Item2,
           [interfaceOrAbstractDefinition.Item1]));
@@ -443,7 +450,7 @@ namespace SetOnceGenerator
         /// global default namespace used by default.
         string namespaceDeclaration = "";
 
-        string hintNamePrefix = "SetOnceGenerator";
+        string hintNamePrefix = nameof(SetOnceGenerator); //"SetOnceGenerator";
 
         if (!string.IsNullOrWhiteSpace(fullyQualifiedNamespaces))
         {
@@ -453,7 +460,7 @@ namespace SetOnceGenerator
 
         string usingStatements = FormatUsingStatements(classToAugment.UsingNamespaces);
 
-        string classSignature = classToAugment.TypeName.FormatClassSignature();
+        string classSignature = classToAugment.TypeName.FormatClassSignature(classToAugment.Accessibility);
         //string classSignature = classToAugment.ClassType.FormatClassSignature();
 
         string settableProperties = "";

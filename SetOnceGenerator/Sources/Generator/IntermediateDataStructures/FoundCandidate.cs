@@ -95,7 +95,7 @@ namespace SetOnceGenerator
   /// decalre as a <see cref="IEnumerable{string}",/>
   /// or a potential partial class implementing an interface as a <see cref="ClassCandidate"/>
   /// </summary>
-  public readonly struct FoundCandidate
+  public readonly struct FoundCandidate : IEquatable<FoundCandidate>
   {
     public ClassCandidate? FoundClass { get; init; }
     public (INamedTypeSymbol, PropertyDefinition)? FoundInterfaceOrAbstractProperty { get; init; }
@@ -110,5 +110,21 @@ namespace SetOnceGenerator
       FoundInterfaceOrAbstractProperty = interfaceOrAbstractProperty;
       Usings = usings;
     }
+
+    #region Equality
+    public override int GetHashCode()
+      => (FoundClass, FoundInterfaceOrAbstractProperty).GetHashCode()
+      ^ GeneratorUtillities.stringHashSetComparer.GetHashCode(Usings)*4166287;
+    //=> (FoundClass, Usings, FoundInterfaceOrAbstractProperty).GetHashCode();
+
+    public override bool Equals(object obj)
+      => obj is FoundCandidate other && Equals(other);
+
+    public bool Equals(FoundCandidate other)
+      => FoundClass.Equals(other.FoundClass)
+      && FoundInterfaceOrAbstractProperty.Equals(other.FoundInterfaceOrAbstractProperty)
+      && Usings.SetEquals(other.Usings)
+      ;
+    #endregion
   }
 }

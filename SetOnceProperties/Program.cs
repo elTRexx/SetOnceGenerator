@@ -89,7 +89,7 @@ IPOCO settableOncePOCO2 = new POCO();
 
 Console.WriteLine("Debug POCO#1");
 Console.WriteLine(settableOncePOCO1.Debug());
-Console.WriteLine("Trying to set POCO#1.Data");
+Console.WriteLine("Trying to set POCO#1.Data and POCO#1.GuidData");
 settableOncePOCO1.Data = settableOnceDTO2;
 settableOncePOCO1.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO#1");
@@ -97,7 +97,7 @@ Console.WriteLine(settableOncePOCO1.Debug());
 
 Console.WriteLine("Debug POCO#2");
 Console.WriteLine(settableOncePOCO2.Debug());
-Console.WriteLine("Trying to set POCO#2.Data");
+Console.WriteLine("Trying to set POCO#2.Data and POCO#2.GuidData");
 settableOncePOCO2.Data = settableOnceDTO2;
 settableOncePOCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO#2");
@@ -109,7 +109,7 @@ IPOCO<Guid> settableOnceGeneric2POCO = new POCO2<Guid>(settableOnceDTO1, settabl
 
 Console.WriteLine("Debug POCO2#1<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO.MyDebug());
-Console.WriteLine("Trying to set POCO2#1<Guid>.Data");
+Console.WriteLine("Trying to set POCO2#1<Guid>.Data and POCO2#1.GuidData");
 settableOnceGeneric2POCO.Data = settableOnceDTO2;
 settableOnceGeneric2POCO.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO2#1<Guid>");
@@ -124,7 +124,7 @@ IPOCO<Guid> settableOnceGeneric2POCO2 = new POCO2<Guid>(settableOnceDTO1, settab
 
 Console.WriteLine("Debug POCO2#2<Guid>");
 Console.WriteLine(settableOnceGeneric2POCO2.MyDebug());
-Console.WriteLine("Trying to set POCO2#2<Guid>.Data");
+Console.WriteLine("Trying to set POCO2#2<Guid>.Data and POCO2#2.GuidData");
 settableOnceGeneric2POCO2.Data = settableOnceDTO2;
 settableOnceGeneric2POCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO2#2<Guid>");
@@ -141,7 +141,7 @@ IPOCO<int> settableOnceGeneric3POCO = new POCO3(settableOnceDTO1, settableOnceGu
 
 Console.WriteLine("Debug POCO3#1");
 Console.WriteLine(settableOnceGeneric3POCO.MyDebug());
-Console.WriteLine("Trying to set POCO3#1.Data");
+Console.WriteLine("Trying to set POCO3#1.Data and POCO3#1.GuidData");
 settableOnceGeneric3POCO.Data = settableOnceDTO2;
 settableOnceGeneric3POCO.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO3#1");
@@ -156,7 +156,7 @@ IPOCO<int> settableOnceGeneric3POCO2 = new POCO3(settableOnceDTO1, settableOnceG
 
 Console.WriteLine("Debug POCO3#2");
 Console.WriteLine(settableOnceGeneric3POCO2.MyDebug());
-Console.WriteLine("Trying to set POCO3#2.Data");
+Console.WriteLine("Trying to set POCO3#2.Data and POCO3#2.GuidData");
 settableOnceGeneric3POCO2.Data = settableOnceDTO2;
 settableOnceGeneric3POCO2.GuidData = settableOnceGuidDTO2;
 Console.WriteLine("Debug POCO3#2");

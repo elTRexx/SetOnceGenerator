@@ -96,22 +96,34 @@ namespace SetOnceGenerator
     public TypeName TypeName { get; init; }
     public string FullTypeName => TypeName.FullName;
 
+    public ModifiersNames Modifiers { get; init; }
+
     public AttributeDefinition AttributeArgument { get; init; }
 
     public bool IsNull => string.IsNullOrWhiteSpace(Name)
         || string.IsNullOrWhiteSpace(TypeName.Name);
 
-    public PropertyDefinition(string name, TypeName typeName, AttributeDefinition attributeArguments)
+    public PropertyDefinition(string name, TypeName typeName, ModifiersNames modifiersNames, AttributeDefinition attributeArguments)
     {
       Name = name;
       TypeName = typeName;
+      Modifiers = modifiersNames;
       AttributeArgument = attributeArguments;
     }
+
+    #region Equality
+    public override bool Equals(object obj)
+      => obj is PropertyDefinition other && Equals(other);
 
     public bool Equals(PropertyDefinition other)
       => !IsNull && !other.IsNull
       && Name == other.Name
       && TypeName.Equals(other.TypeName)
+      && Modifiers.Equals(other.Modifiers)
       && AttributeArgument.Equals(other.AttributeArgument);
+
+    public override int GetHashCode()
+      => (Name, TypeName, Modifiers, AttributeArgument).GetHashCode();
+    #endregion
   }
 }

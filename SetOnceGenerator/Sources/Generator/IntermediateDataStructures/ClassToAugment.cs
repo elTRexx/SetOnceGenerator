@@ -98,15 +98,19 @@ namespace SetOnceGenerator
   /// and the collection of interfaces, this class implement, 
   /// that have any property marked as [SetOnce] / [SetNTimes(n)] as a <see cref="HashSet{InterfaceDefinition}"/>
   /// </summary>
-  public readonly struct ClassToAugment
+  public readonly struct ClassToAugment : IEquatable<ClassToAugment>
   {
+    public string Accessibility { get; init; }
     public string Namespace { get; init; }
     public HashSet<string> UsingNamespaces { get; init; }
     public TypeName TypeName { get; init; }
     public HashSet<InterfaceOrAbstractDefinition> InterfacesOrAbstractsDefinitions { get; init; }
 
-    public ClassToAugment(TypeName typeName, string @namespace, HashSet<string>? usingNamespaces = default, HashSet<InterfaceOrAbstractDefinition>? interfacesOrAbstractsDefinitions = default)
+    private static readonly IEqualityComparer<HashSet<InterfaceOrAbstractDefinition>> _hashSetComparer = HashSet<InterfaceOrAbstractDefinition>.CreateSetComparer();
+
+    public ClassToAugment(string accessibility, TypeName typeName, string @namespace, HashSet<string>? usingNamespaces = default, HashSet<InterfaceOrAbstractDefinition>? interfacesOrAbstractsDefinitions = default)
     {
+      Accessibility = accessibility;
       Namespace = @namespace;
       TypeName = typeName;
       UsingNamespaces = usingNamespaces ?? [];
@@ -114,5 +118,28 @@ namespace SetOnceGenerator
       UsingNamespaces.UnionWith([$"using {nameof(SetOnceGenerator)};"]);
       InterfacesOrAbstractsDefinitions = interfacesOrAbstractsDefinitions ?? [];
     }
+
+    #region Equality
+    public override int GetHashCode()
+    {
+      int hashSetCode = _hashSetComparer.GetHashCode(InterfacesOrAbstractsDefinitions);
+      return
+        (Accessibility, Namespace, TypeName).GetHashCode()
+        ^ GeneratorUtillities.stringHashSetComparer.GetHashCode(UsingNamespaces) * 3471899
+        ^ hashSetCode * 2411033;
+    }
+    //=> (Namespace, UsingNamespaces, TypeName, InterfacesOrAbstractsDefinitions).GetHashCode();
+
+    public override bool Equals(object obj)
+      => obj is ClassToAugment other && Equals(other);
+
+    public bool Equals(ClassToAugment other)
+      => Accessibility == other.Accessibility
+      && Namespace == other.Namespace
+      && TypeName.Equals(other.TypeName)
+      && InterfacesOrAbstractsDefinitions.SetEquals(other.InterfacesOrAbstractsDefinitions)
+      && UsingNamespaces.SetEquals(other.UsingNamespaces)
+      ;
+    #endregion
   }
 }

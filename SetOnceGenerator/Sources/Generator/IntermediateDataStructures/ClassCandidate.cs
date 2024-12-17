@@ -91,7 +91,7 @@ namespace SetOnceGenerator
   /// its namespace as a <see cref="string"/>, its semantic symbol as a <see cref="INamedTypeSymbol"/>
   /// and a collection of using statements that this class decalre as a <see cref="HashSet{string}"/>.
   /// </summary>
-  public readonly struct ClassCandidate
+  public readonly struct ClassCandidate : IEquatable<ClassCandidate>
   {
     public string Namespace { get; init; }
 
@@ -105,5 +105,20 @@ namespace SetOnceGenerator
       ClassType = classType;
       Usings = new HashSet<string>();
     }
+
+    #region Equality
+    public override int GetHashCode()
+      => (Namespace, ClassType).GetHashCode() ^ GeneratorUtillities.stringHashSetComparer.GetHashCode(Usings)*2893249;
+    //=> (Namespace, ClassType, Usings).GetHashCode();
+
+    public override bool Equals(object obj)
+      => obj is ClassCandidate other && Equals(other);
+
+    public bool Equals(ClassCandidate other)
+      => Namespace == other.Namespace
+      && (ClassType == default && other.ClassType == default
+          || (ClassType?.Equals(other.ClassType, SymbolEqualityComparer.Default) ?? false))
+      && Usings.SetEquals(other.Usings);
+    #endregion
   }
 }
